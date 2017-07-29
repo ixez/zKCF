@@ -1,138 +1,67 @@
 #include <KCF.h>
+#include <Kernel/GaussianKernel.h>
+#include <Feature/HogFeature.h>
+#include <Feature/HogLabFeature.h>
 #include "KCF.h"
 #include "ffttools.hpp"
 #include "recttools.hpp"
 #include "fhog.hpp"
 #include "labdata.hpp"
 
-namespace track {
-    KCF::KCF(bool hog, bool fixed_window, bool multiscale, bool lab) {
-
-        // Parameters equal in all cases
-
-        if (hog) {    // HOG
-            // VOT
-            LearningRate = 0.012;
-            Sigma = 0.6;
-            // TPAMI
-            //interp_factor = 0.02;
-            //sigma = 0.5;
-            cell_size = 4;
-            _hogfeatures = true;
-
-            if (lab) {
-                LearningRate = 0.005;
-                Sigma = 0.4;
-                //output_sigma_factor = 0.025;
-                OutputSigmaFactor = 0.1;
-
-                _labfeatures = true;
-                _labCentroids = cv::Mat(nClusters, 3, CV_32FC1, &data);
-                cell_sizeQ = cell_size * cell_size;
-            } else {
-                _labfeatures = false;
-            }
-        } else {   // RAW
-            LearningRate = 0.075;
-            Sigma = 0.2;
-            cell_size = 1;
-            _hogfeatures = false;
-
-            if (lab) {
-                printf("Lab features are only used with HOG features.\n");
-                _labfeatures = false;
-            }
-        }
-
-
-        if (multiscale) { // multiscale
-            template_size = 96;
-            //template_size = 100;
-            scale_step = 1.05;
-            scale_weight = 0.95;
-            if (!fixed_window) {
-                //printf("Multiscale does not support non-fixed window.\n");
-                fixed_window = true;
-            }
-        } else if (fixed_window) {  // fit correction without multiscale
-            template_size = 96;
-            //template_size = 100;
-            scale_step = 1;
-        } else {
-            template_size = 1;
-            scale_step = 1;
-        }
-    }
-
-    void KCF::Init(const Mat &frm, Rect roi) {
-        switch(FeatureType) {
-            case HOG:
-                InitHog(frm,roi);
-                break;
-        }
-        _roi = roi;
-        assert(roi.width >= 0 && roi.height >= 0);
-        _tmpl = getFeatures(frm, 1);
-        _prob = createGaussianPeak(size_patch[0], size_patch[1]);
-        _alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-        //_num = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-        //_den = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-        train(_tmpl, 1.0); // train with initial frame
-    }
-
+namespace zkcf {
 // Update position based on the new frame
     cv::Rect KCF::update(cv::Mat image) {
-        if (_roi.x + _roi.width <= 0) _roi.x = -_roi.width + 1;
-        if (_roi.y + _roi.height <= 0) _roi.y = -_roi.height + 1;
-        if (_roi.x >= image.cols - 1) _roi.x = image.cols - 2;
-        if (_roi.y >= image.rows - 1) _roi.y = image.rows - 2;
+        if (Roi.x + Roi.width <= 0) Roi.x = -Roi.width + 1;
+        if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 1;
+        if (Roi.x >= image.cols - 1) Roi.x = image.cols - 2;
+        if (Roi.y >= image.rows - 1) Roi.y = image.rows - 2;
 
-        float cx = _roi.x + _roi.width / 2.0f;
-        float cy = _roi.y + _roi.height / 2.0f;
+        float cx = Roi.x + Roi.width / 2.0f;
+        float cy = Roi.y + Roi.height / 2.0f;
 
 
         float peak_value;
         cv::Point2f res = detect(_tmpl, getFeatures(image, 0, 1.0f), peak_value);
 
-        if (scale_step != 1) {
+        if (ScaleStep != 1) {
             // Test at a smaller _scale
             float new_peak_value;
-            cv::Point2f new_res = detect(_tmpl, getFeatures(image, 0, 1.0f / scale_step), new_peak_value);
+            cv::Point2f new_res = detect(_tmpl, getFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
 
-            if (scale_weight * new_peak_value > peak_value) {
+            if (ScaleWeight * new_peak_value > peak_value) {
                 res = new_res;
                 peak_value = new_peak_value;
-                _scale /= scale_step;
-                _roi.width /= scale_step;
-                _roi.height /= scale_step;
+                _scale /= ScaleStep;
+                Roi.width /= ScaleStep;
+                Roi.height /= ScaleStep;
             }
 
             // Test at a bigger _scale
-            new_res = detect(_tmpl, getFeatures(image, 0, scale_step), new_peak_value);
+            new_res = detect(_tmpl, getFeatures(image, 0, ScaleStep), new_peak_value);
 
-            if (scale_weight * new_peak_value > peak_value) {
+            if (ScaleWeight * new_peak_value > peak_value) {
                 res = new_res;
                 peak_value = new_peak_value;
-                _scale *= scale_step;
-                _roi.width *= scale_step;
-                _roi.height *= scale_step;
+                _scale *= ScaleStep;
+                Roi.width *= ScaleStep;
+                Roi.height *= ScaleStep;
             }
         }
 
         // Adjust by cell size and _scale
-        _roi.x = cx - _roi.width / 2.0f + ((float) res.x * cell_size * _scale);
-        _roi.y = cy - _roi.height / 2.0f + ((float) res.y * cell_size * _scale);
+        Roi.x = cx - Roi.width / 2.0f + ((float) res.x * CellSize * _scale);
+        Roi.y = cy - Roi.height / 2.0f + ((float) res.y * CellSize * _scale);
 
-        if (_roi.x >= image.cols - 1) _roi.x = image.cols - 1;
-        if (_roi.y >= image.rows - 1) _roi.y = image.rows - 1;
-        if (_roi.x + _roi.width <= 0) _roi.x = -_roi.width + 2;
-        if (_roi.y + _roi.height <= 0) _roi.y = -_roi.height + 2;
+        if (Roi.x >= image.cols - 1) Roi.x = image.cols - 1;
+        if (Roi.y >= image.rows - 1) Roi.y = image.rows - 1;
+        if (Roi.x + Roi.width <= 0) Roi.x = -Roi.width + 2;
+        if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 2;
 
-        assert(_roi.width >= 0 && _roi.height >= 0);
+        assert(Roi.width >= 0 && Roi.height >= 0);
         cv::Mat x = getFeatures(image, 0);
         train(x, LearningRate);
 
-        return _roi;
+        return Roi;
     }
 
 
@@ -248,18 +177,18 @@ namespace track {
     cv::Mat KCF::getFeatures(const cv::Mat &image, bool inithann, float scale_adjust) {
         cv::Rect extracted_roi;
 
-        float cx = _roi.x + _roi.width / 2;
-        float cy = _roi.y + _roi.height / 2;
+        float cx = Roi.x + Roi.width / 2;
+        float cy = Roi.y + Roi.height / 2;
 
         if (inithann) {
-            int padded_w = _roi.width * Padding;
-            int padded_h = _roi.height * Padding;
+            int padded_w = Roi.width * Padding;
+            int padded_h = Roi.height * Padding;
 
-            if (template_size > 1) {  // Fit largest dimension to the given template size
+            if (TemplateSize > 1) {  // Fit largest dimension to the given template size
                 if (padded_w >= padded_h)  //fit to width
-                    _scale = padded_w / (float) template_size;
+                    _scale = padded_w / (float) TemplateSize;
                 else
-                    _scale = padded_h / (float) template_size;
+                    _scale = padded_h / (float) TemplateSize;
 
                 _tmpl_sz.width = padded_w / _scale;
                 _tmpl_sz.height = padded_h / _scale;
@@ -282,8 +211,8 @@ namespace track {
 
             if (_hogfeatures) {
                 // Round to cell size and also make it even
-                _tmpl_sz.width = (((int) (_tmpl_sz.width / (2 * cell_size))) * 2 * cell_size) + cell_size * 2;
-                _tmpl_sz.height = (((int) (_tmpl_sz.height / (2 * cell_size))) * 2 * cell_size) + cell_size * 2;
+                _tmpl_sz.width = (((int) (_tmpl_sz.width / (2 * CellSize))) * 2 * CellSize) + CellSize * 2;
+                _tmpl_sz.height = (((int) (_tmpl_sz.height / (2 * CellSize))) * 2 * CellSize) + CellSize * 2;
             } else {  //Make number of pixels even (helps with some logic involving half-dimensions)
                 _tmpl_sz.width = (_tmpl_sz.width / 2) * 2;
                 _tmpl_sz.height = (_tmpl_sz.height / 2) * 2;
@@ -308,7 +237,7 @@ namespace track {
         if (_hogfeatures) {
             IplImage z_ipl = z;
             CvLSVMFeatureMapCaskade *map;
-            getFeatureMaps(&z_ipl, cell_size, &map);
+            getFeatureMaps(&z_ipl, CellSize, &map);
             normalizeAndTruncate(map, 0.2f);
             PCAFeatureMaps(map);
             size_patch[0] = map->sizeY;
@@ -327,15 +256,15 @@ namespace track {
                 unsigned char *input = (unsigned char *) (imgLab.data);
 
                 // Sparse output vector
-                cv::Mat outputLab = cv::Mat(_labCentroids.rows, size_patch[0] * size_patch[1], CV_32F, float(0));
+                cv::Mat outputLab = cv::Mat(LabCentroids.rows, size_patch[0] * size_patch[1], CV_32F, float(0));
 
                 int cntCell = 0;
                 // Iterate through each cell
-                for (int cY = cell_size; cY < z.rows - cell_size; cY += cell_size) {
-                    for (int cX = cell_size; cX < z.cols - cell_size; cX += cell_size) {
+                for (int cY = CellSize; cY < z.rows - CellSize; cY += CellSize) {
+                    for (int cX = CellSize; cX < z.cols - CellSize; cX += CellSize) {
                         // Iterate through each pixel of cell (cX,cY)
-                        for (int y = cY; y < cY + cell_size; ++y) {
-                            for (int x = cX; x < cX + cell_size; ++x) {
+                        for (int y = cY; y < cY + CellSize; ++y) {
+                            for (int x = cX; x < cX + CellSize; ++x) {
                                 // Lab components for each pixel
                                 float l = (float) input[(z.cols * y + x) * 3];
                                 float a = (float) input[(z.cols * y + x) * 3 + 1];
@@ -344,8 +273,8 @@ namespace track {
                                 // Iterate trough each centroid
                                 float minDist = FLT_MAX;
                                 int minIdx = 0;
-                                float *inputCentroid = (float *) (_labCentroids.data);
-                                for (int k = 0; k < _labCentroids.rows; ++k) {
+                                float *inputCentroid = (float *) (LabCentroids.data);
+                                for (int k = 0; k < LabCentroids.rows; ++k) {
                                     float dist = ((l - inputCentroid[3 * k]) * (l - inputCentroid[3 * k]))
                                                  + ((a - inputCentroid[3 * k + 1]) * (a - inputCentroid[3 * k + 1]))
                                                  + ((b - inputCentroid[3 * k + 2]) * (b - inputCentroid[3 * k + 2]));
@@ -355,7 +284,7 @@ namespace track {
                                     }
                                 }
                                 // Store result at output
-                                outputLab.at<float>(minIdx, cntCell) += 1.0 / cell_sizeQ;
+                                outputLab.at<float>(minIdx, cntCell) += 1.0 / (CellSize * CellSize);
                                 //((float*) outputLab.data)[minIdx * (size_patch[0]*size_patch[1]) + cntCell] += 1.0 / cell_sizeQ;
                             }
                         }
@@ -363,7 +292,7 @@ namespace track {
                     }
                 }
                 // Update size_patch[2] and add features to FeaturesMap
-                size_patch[2] += _labCentroids.rows;
+                size_patch[2] += LabCentroids.rows;
                 FeaturesMap.push_back(outputLab);
             }
         } else {
@@ -419,13 +348,51 @@ namespace track {
         return 0.5 * (right - left) / divisor;
     }
 
-    KCF::KCF(KCF::eFeatType ft, KCF::eKernelType kt) {
-        FeatureType=ft;
+    KCF::KCF(IFeature::Type ft, IKernel::Type kt) {
+        FeatType=ft;
         KernelType=kt;
     }
 
-    void KCF::InitHog(const Mat &frm, Rect roi) {
+    void KCF::Init(const Mat &frm, Rect roi) {
+        Lambda = 0.0001;
+        Padding = 2.5;
+        OutputSigmaFactor = 0.125;
+        switch(FeatType) {
+            case IFeature::HOG:
+                LearningRate = 0.012;
+                Sigma = 0.6;
+                Feature=new HogFeature(KernelType);
+                break;
+            case IFeature::HOG_LAB:
+                LearningRate = 0.005;
+                Sigma = 0.4;
+                OutputSigmaFactor = 0.1;
+                Feature=new HogLabFeature(KernelType,CellSize);
+                break;
+            case IFeature::RAW:
+                LearningRate = 0.075;
+                Sigma = 0.2;
+//                Feature=new RawFeature(KernelType,CellSize);
+                break;
+        }
+        Kernel=Feature->Kernel;
+        if(EnableScale) {
+            TemplateSize=TEMPLATE_SIZE_SCALE;
+            ScaleStep = 1.05;
+            ScaleWeight = 0.95;
+        }
+        else {
+            ScaleStep = 1;
+            ScaleWeight = 1;
+        }
 
+        assert(roi.width >= 0 && roi.height >= 0);
+        Roi = roi;
+        _tmpl = getFeatures(frm, 1);
+        _prob = createGaussianPeak(size_patch[0], size_patch[1]);
+        _alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
+        //_num = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
+        //_den = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
+        train(_tmpl, 1.0); // train with initial frame
     }
-
 }
