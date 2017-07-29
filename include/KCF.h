@@ -36,13 +36,13 @@ For speed, the value (template_size/cell_size) should be a power of 2 or a produ
 
 Inputs to init():
    image is the initial frame.
-   roi is a cv::Rect with the target positions in the initial frame
+   roi is a Rect with the target positions in the initial frame
 
 Inputs to update():
    image is the current frame.
 
 Outputs of update():
-   cv::Rect with target positions for the current frame
+   Rect with target positions for the current frame
 
 
 By downloading, copying, installing or using the software you agree to this license.
@@ -81,71 +81,92 @@ the use of this software, even if advised of the possibility of such damage.
  */
 
 #pragma once
+#include <opencv2/opencv.hpp>
+namespace track {
+    using namespace cv;
+    class KCF {
+    public:
+        // Constructor
+        KCF(bool hog = true, bool fixed_window = true, bool multiscale = true, bool lab = true);
 
-#include "tracker.h"
+        // Initialize tracker
 
-#ifndef _OPENCV_KCFTRACKER_HPP_
-#define _OPENCV_KCFTRACKER_HPP_
-#endif
 
-class KCFTracker : public Tracker
-{
-public:
-    // Constructor
-    KCFTracker(bool hog = true, bool fixed_window = true, bool multiscale = true, bool lab = true);
+        // Update position based on the new frame
+        virtual Rect update(Mat image);
 
-    // Initialize tracker 
-    virtual void init(const cv::Rect &roi, cv::Mat image);
-    
-    // Update position based on the new frame
-    virtual cv::Rect update(cv::Mat image);
 
-    float interp_factor; // linear interpolation factor for adaptation
-    float sigma; // gaussian kernel bandwidth
-    float lambda; // regularization
-    int cell_size; // HOG cell size
-    int cell_sizeQ; // cell size^2, to avoid repeated operations
-    float padding; // extra area surrounding the target
-    float output_sigma_factor; // bandwidth of gaussian target
-    int template_size; // template size
-    float scale_step; // scale step for multi-scale estimation
-    float scale_weight;  // to downweight detection scores of other scales for added stability
+        int cell_size; // HOG cell size
+        int cell_sizeQ; // cell size^2, to avoid repeated operations
+        int template_size; // template size
+        float scale_step; // scale step for multi-scale estimation
+        float scale_weight;  // to downweight detection scores of other scales for added stability
+        Rect _roi;
+    protected:
+        // Detect object in the current frame.
+        Point2f detect(Mat z, Mat x, float &peak_value);
 
-protected:
-    // Detect object in the current frame.
-    cv::Point2f detect(cv::Mat z, cv::Mat x, float &peak_value);
+        // train tracker with a single image
+        void train(Mat x, float train_interp_factor);
 
-    // train tracker with a single image
-    void train(cv::Mat x, float train_interp_factor);
+        // Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, which must both be MxN. They must    also be periodic (ie., pre-processed with a cosine window).
+        Mat gaussianCorrelation(Mat x1, Mat x2);
 
-    // Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, which must both be MxN. They must    also be periodic (ie., pre-processed with a cosine window).
-    cv::Mat gaussianCorrelation(cv::Mat x1, cv::Mat x2);
+        // Create Gaussian Peak. Function called only in the first frame.
+        Mat createGaussianPeak(int sizey, int sizex);
 
-    // Create Gaussian Peak. Function called only in the first frame.
-    cv::Mat createGaussianPeak(int sizey, int sizex);
+        // Obtain sub-window from image, with replication-padding and extract features
+        Mat getFeatures(const Mat &image, bool inithann, float scale_adjust = 1.0f);
 
-    // Obtain sub-window from image, with replication-padding and extract features
-    cv::Mat getFeatures(const cv::Mat & image, bool inithann, float scale_adjust = 1.0f);
+        // Initialize Hanning window. Function called only in the first frame.
+        void createHanningMats();
 
-    // Initialize Hanning window. Function called only in the first frame.
-    void createHanningMats();
+        // Calculate sub-pixel peak for one dimension
+        float subPixelPeak(float left, float center, float right);
 
-    // Calculate sub-pixel peak for one dimension
-    float subPixelPeak(float left, float center, float right);
+        Mat _alphaf;
+        Mat _prob;
+        Mat _tmpl;
+        Mat _num;
+        Mat _den;
+        Mat _labCentroids;
 
-    cv::Mat _alphaf;
-    cv::Mat _prob;
-    cv::Mat _tmpl;
-    cv::Mat _num;
-    cv::Mat _den;
-    cv::Mat _labCentroids;
+    private:
+        int size_patch[3];
+        Mat hann;
+        Size _tmpl_sz;
+        float _scale;
+        int _gaussian_size;
+        bool _hogfeatures;
+        bool _labfeatures;
 
-private:
-    int size_patch[3];
-    cv::Mat hann;
-    cv::Size _tmpl_sz;
-    float _scale;
-    int _gaussian_size;
-    bool _hogfeatures;
-    bool _labfeatures;
-};
+    public:
+        typedef enum
+        {
+            HOG     = 1,
+            HOG_LAB = 2,
+            GRAY    = 3,
+            RAW     = 4
+        } eFeatType;
+        typedef enum
+        {
+            GAUSSIAN    = 1,
+            POLYNOMIAL  = 2,
+            LINEAR      = 3
+        } eKernelType;
+
+        KCF(eFeatType ft=HOG, eKernelType kt=GAUSSIAN);
+        void Init(const Mat &frm, Rect roi);
+    private:
+        void InitHog(const Mat &frm, Rect roi);
+
+        eFeatType FeatureType;
+        eKernelType KernelType;
+        float LearningRate;
+        float Sigma;
+        float Lambda = 0.0001;
+        float OutputSigmaFactor = 0.125;
+        float Padding = 2.5;
+
+    };
+}
