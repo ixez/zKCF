@@ -1,5 +1,6 @@
+#include "KCF.h"
 #include <opencv2/opencv.hpp>
-#include "kcftracker.hpp"
+#include <stdio.h>
 
 int main(int argc, char* argv[])
 {
@@ -12,7 +13,7 @@ int main(int argc, char* argv[])
 
     int startFrm=atoi(argv[2]), endFrm=atoi(argv[3]);
 
-	KCFTracker tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
+	track::KCF tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
 
 	bool pause = false;
     for(int i=startFrm;i<endFrm;i++) {
@@ -20,7 +21,7 @@ int main(int argc, char* argv[])
         sprintf(path, argv[1], i);
         Mat frm = imread(path);
         if (i == startFrm) {
-            tracker.init( Rect(atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7])), frm );
+            tracker.Init(frm, Rect(atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7])));
         } else {
             Rect res = tracker.update(frm);
             Mat render = frm.clone();
