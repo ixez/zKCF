@@ -13,8 +13,7 @@ int main(int argc, char* argv[])
 
     int startFrm=atoi(argv[2]), endFrm=atoi(argv[3]);
 
-	track::KCF tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
-
+	zkcf::KCF tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
 	bool pause = false;
     for(int i=startFrm;i<endFrm;i++) {
         char path[500];

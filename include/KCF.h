@@ -82,26 +82,19 @@ the use of this software, even if advised of the possibility of such damage.
 
 #pragma once
 #include <opencv2/opencv.hpp>
-namespace track {
+#include <Kernel/IKernel.h>
+#include <Feature/IFeature.h>
+
+namespace zkcf {
     using namespace cv;
     class KCF {
     public:
-        // Constructor
-        KCF(bool hog = true, bool fixed_window = true, bool multiscale = true, bool lab = true);
-
-        // Initialize tracker
-
-
-        // Update position based on the new frame
         virtual Rect update(Mat image);
 
 
-        int cell_size; // HOG cell size
         int cell_sizeQ; // cell size^2, to avoid repeated operations
-        int template_size; // template size
-        float scale_step; // scale step for multi-scale estimation
-        float scale_weight;  // to downweight detection scores of other scales for added stability
-        Rect _roi;
+        float ScaleStep; // scale step for multi-scale estimation
+        float ScaleWeight;  // to downweight detection scores of other scales for added stability
     protected:
         // Detect object in the current frame.
         Point2f detect(Mat z, Mat x, float &peak_value);
@@ -129,7 +122,7 @@ namespace track {
         Mat _tmpl;
         Mat _num;
         Mat _den;
-        Mat _labCentroids;
+
 
     private:
         int size_patch[3];
@@ -141,32 +134,28 @@ namespace track {
         bool _labfeatures;
 
     public:
-        typedef enum
-        {
-            HOG     = 1,
-            HOG_LAB = 2,
-            GRAY    = 3,
-            RAW     = 4
-        } eFeatType;
-        typedef enum
-        {
-            GAUSSIAN    = 1,
-            POLYNOMIAL  = 2,
-            LINEAR      = 3
-        } eKernelType;
-
-        KCF(eFeatType ft=HOG, eKernelType kt=GAUSSIAN);
+        KCF(IFeature::Type ft=IFeature::HOG, IKernel::Type kt=IKernel::GAUSSIAN);
         void Init(const Mat &frm, Rect roi);
-    private:
-        void InitHog(const Mat &frm, Rect roi);
 
-        eFeatType FeatureType;
-        eKernelType KernelType;
+        bool EnableScale = true;
+
+        const static int TEMPLATE_SIZE_SCALE = 96; // Template size use ROI size
+        const static int TEMPLATE_SIZE_NONE = -1;  // Only applicable when no scaling
+        int TemplateSize;
+
+    private:
         float LearningRate;
         float Sigma;
-        float Lambda = 0.0001;
-        float OutputSigmaFactor = 0.125;
-        float Padding = 2.5;
+        float Lambda;
+        float Padding;
+        float OutputSigmaFactor;
 
+
+        Rect Roi;
+
+        IFeature::Type FeatType;
+        IKernel::Type KernelType;
+        IFeature* Feature = nullptr;
+        IKernel* Kernel = nullptr;
     };
 }
