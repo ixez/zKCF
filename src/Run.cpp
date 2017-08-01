@@ -5,15 +5,9 @@
 int main(int argc, char* argv[])
 {
     using namespace cv;
-
-    bool HOG = true;
-	bool FIXEDWINDOW = false;
-	bool MULTISCALE = true;
-	bool LAB = false;
-
     int startFrm=atoi(argv[2]), endFrm=atoi(argv[3]);
 
-	zkcf::KCF tracker(HOG, FIXEDWINDOW, MULTISCALE, LAB);
+	zkcf::KCF tracker;
 	bool pause = false;
     for(int i=startFrm;i<endFrm;i++) {
         char path[500];
