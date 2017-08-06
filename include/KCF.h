@@ -109,7 +109,7 @@ namespace zkcf {
         Mat createGaussianPeak(int sizey, int sizex);
 
         // Obtain sub-window from image, with replication-padding and extract features
-        Mat getFeatures(const Mat &image, bool inithann, float scale_adjust = 1.0f);
+
 
         // Initialize Hanning window. Function called only in the first frame.
         void createHanningMats();
@@ -119,7 +119,7 @@ namespace zkcf {
 
         Mat _alphaf;
         Mat _prob;
-        Mat _tmpl;
+
         Mat _num;
         Mat _den;
 
@@ -140,18 +140,20 @@ namespace zkcf {
         bool EnableScale = true;
 
         typedef enum {
-            TEMPLATE_SIZE_FIXED = 96,   // Longer edge will resize to this length and exctract features
-            TEMPLATE_SIZE_NONE = -1
-        } eTemplateSize;
-        eTemplateSize TemplateSize;
+            TMPL_MODE_FIXED = 1,   // Longer edge will resize to this length and exctract features
+            TMPL_MODE_NONE = 0     // Not resize, keep size
+        } eTemplateMode;
+        eTemplateMode TmplMode;
+        int TmplLen = 96;          // Available when TEMPLATE_MODE_FIXED
 
     private:
+        Mat GetFeatures(const Mat &patch) const;
+
         float LearningRate;
         float Sigma;
         float Lambda;
         float Padding;
         float OutputSigmaFactor;
-
 
         Rect Roi;
 
@@ -159,5 +161,7 @@ namespace zkcf {
         IKernel::Type KernelType;
         IFeature* Feature = nullptr;
         IKernel* Kernel = nullptr;
+
+        Mat X;
     };
 }

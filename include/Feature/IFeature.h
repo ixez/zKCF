@@ -1,7 +1,7 @@
 #pragma once
-#include <Kernel/IKernel.h>
-#include <zconf.h>
-#include <Kernel/GaussianKernel.h>
+#include "Kernel/IKernel.h"
+#include "Kernel/GaussianKernel.h"
+#include <opencv2/core/mat.hpp>
 
 namespace zkcf {
     class IFeature {
@@ -21,6 +21,8 @@ namespace zkcf {
                     break;
             }
         }
+
+        virtual cv::Mat Extract(const cv::Mat& patch) const=0;
 
         IKernel* Kernel=nullptr;
         int CellSize = 1;
