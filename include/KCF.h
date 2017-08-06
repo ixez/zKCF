@@ -139,9 +139,11 @@ namespace zkcf {
 
         bool EnableScale = true;
 
-        const static int TEMPLATE_SIZE_SCALE = 96; // Template size use ROI size
-        const static int TEMPLATE_SIZE_NONE = -1;  // Only applicable when no scaling
-        int TemplateSize;
+        typedef enum {
+            TEMPLATE_SIZE_FIXED = 96,   // Longer edge will resize to this length and exctract features
+            TEMPLATE_SIZE_NONE = -1
+        } eTemplateSize;
+        eTemplateSize TemplateSize;
 
     private:
         float LearningRate;
