@@ -21,12 +21,12 @@ namespace zkcf {
 
 
         float peak_value;
-        cv::Point2f res = detect(_tmpl, getFeatures(image, 0, 1.0f), peak_value);
+        cv::Point2f res = detect(X, GetFeatures(image, 0, 1.0f), peak_value);
 
         if (ScaleStep != 1) {
             // Test at a smaller _scale
             float new_peak_value;
-            cv::Point2f new_res = detect(_tmpl, getFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
+            cv::Point2f new_res = detect(X, GetFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
 
             if (ScaleWeight * new_peak_value > peak_value) {
                 res = new_res;
@@ -37,7 +37,7 @@ namespace zkcf {
             }
 
             // Test at a bigger _scale
-            new_res = detect(_tmpl, getFeatures(image, 0, ScaleStep), new_peak_value);
+            new_res = detect(X, GetFeatures(image, 0, ScaleStep), new_peak_value);
 
             if (ScaleWeight * new_peak_value > peak_value) {
                 res = new_res;
@@ -58,7 +58,7 @@ namespace zkcf {
         if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 2;
 
         assert(Roi.width >= 0 && Roi.height >= 0);
-        cv::Mat x = getFeatures(image, 0);
+        cv::Mat x = GetFeatures(image, 0);
         train(x, LearningRate);
 
         return Roi;
@@ -102,7 +102,7 @@ namespace zkcf {
         cv::Mat k = gaussianCorrelation(x, x);
         cv::Mat alphaf = complexDivision(_prob, (fftd(k) + Lambda));
 
-        _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
+        X = (1 - train_interp_factor) * X + (train_interp_factor) * x;
         _alphaf = (1 - train_interp_factor) * _alphaf + (train_interp_factor) * alphaf;
 
 
@@ -174,60 +174,57 @@ namespace zkcf {
     }
 
 // Obtain sub-window from image, with replication-padding and extract features
-    cv::Mat KCF::getFeatures(const cv::Mat &image, bool inithann, float scale_adjust) {
-        cv::Rect extracted_roi;
+    cv::Mat KCF::GetFeatures(const cv::Mat &patch) const {
+        cv::Rect paddedRoi;
 
         float cx = Roi.x + Roi.width / 2;
         float cy = Roi.y + Roi.height / 2;
 
-        if (inithann) {
-            int padded_w = Roi.width * Padding;
-            int padded_h = Roi.height * Padding;
+        int paddedW = Roi.width * Padding;
+        int paddedH = Roi.height * Padding;
+        float scale;
+        Size tmplSz;
 
-            if (TemplateSize > 1) {  // Fit largest dimension to the given template size
-                if (padded_w >= padded_h)  //fit to width
-                    _scale = padded_w / (float) TemplateSize;
-                else
-                    _scale = padded_h / (float) TemplateSize;
+        if (TmplMode==TMPL_MODE_FIXED) {
+            // Fit largest dimension to the given length
+            if (Roi.width >= Roi.height)  //fit to width
+                scale = paddedW / (float) TmplLen;
+            else
+                scale = paddedH / (float) TmplLen;
 
-                _tmpl_sz.width = padded_w / _scale;
-                _tmpl_sz.height = padded_h / _scale;
-            } else {  //No template size given, use ROI size
-                _tmpl_sz.width = padded_w;
-                _tmpl_sz.height = padded_h;
-                _scale = 1;
-                // original code from paper:
-                /*if (sqrt(padded_w * padded_h) >= 100) {   //Normal size
-                    _tmpl_sz.width = padded_w;
-                    _tmpl_sz.height = padded_h;
-                    _scale = 1;
-                }
-                else {   //ROI is too big, track at half size
-                    _tmpl_sz.width = padded_w / 2;
-                    _tmpl_sz.height = padded_h / 2;
-                    _scale = 2;
-                }*/
-            }
-
-            if (_hogfeatures) {
-                // Round to cell size and also make it even
-                _tmpl_sz.width = (((int) (_tmpl_sz.width / (2 * CellSize))) * 2 * CellSize) + CellSize * 2;
-                _tmpl_sz.height = (((int) (_tmpl_sz.height / (2 * CellSize))) * 2 * CellSize) + CellSize * 2;
-            } else {  //Make number of pixels even (helps with some logic involving half-dimensions)
-                _tmpl_sz.width = (_tmpl_sz.width / 2) * 2;
-                _tmpl_sz.height = (_tmpl_sz.height / 2) * 2;
-            }
+            tmplSz.width = paddedW / scale;
+            tmplSz.height = paddedH / scale;
+        }
+        else if(TmplMode==TMPL_MODE_NONE) {  //No template size given, use ROI size
+            tmplSz.width = paddedW;
+            tmplSz.height = paddedH;
+            scale = 1;
+        }
+        else {
+            CV_Error(Error::Code::StsInternal ,"Unknown template mode.");
         }
 
-        extracted_roi.width = scale_adjust * _scale * _tmpl_sz.width;
-        extracted_roi.height = scale_adjust * _scale * _tmpl_sz.height;
+        tmplSz.width=(tmplSz.width/2)*2;
+        tmplSz.height=(tmplSz.height/2)*2;
+
+        if(FeatType==IFeature::HOG || FeatType==IFeature::HOG_LAB) {
+            // Round to cell size and also make it even
+            tmplSz.width+=Feature->CellSize*2;
+            tmplSz.height+=Feature->CellSize*2;
+        }
+        else {
+            //Make number of pixels even (helps with some logic involving half-dimensions)
+        }
+
+        paddedRoi.width = tmplSz.width * scale;
+        paddedRoi.height = tmplSz.height * scale;
 
         // center roi with new size
-        extracted_roi.x = cx - extracted_roi.width / 2;
-        extracted_roi.y = cy - extracted_roi.height / 2;
+        paddedRoi.x = cx - paddedRoi.width / 2;
+        paddedRoi.y = cy - paddedRoi.height / 2;
 
         cv::Mat FeaturesMap;
-        cv::Mat z = RectTools::subwindow(image, extracted_roi, cv::BORDER_REPLICATE);
+        cv::Mat z = RectTools::subwindow(patch, paddedRoi, cv::BORDER_REPLICATE);
 
         if (z.cols != _tmpl_sz.width || z.rows != _tmpl_sz.height) {
             cv::resize(z, z, _tmpl_sz);
@@ -377,7 +374,7 @@ namespace zkcf {
         }
         Kernel=Feature->Kernel;
         if(EnableScale) {
-            TemplateSize=TEMPLATE_SIZE_FIXED;
+            TmplMode=TMPL_MODE_FIXED;
             ScaleStep = 1.05;
             ScaleWeight = 0.95;
         }
@@ -388,9 +385,9 @@ namespace zkcf {
 
         assert(roi.width >= 0 && roi.height >= 0);
         Roi = roi;
-        _tmpl = getFeatures(frm, 1);
+        X = GetFeatures(frm, 1);
         _prob = createGaussianPeak(size_patch[0], size_patch[1]);
         _alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-        train(_tmpl, 1.0); // train with initial frame
+        train(X, 1.0); // train with initial frame
     }
 }
