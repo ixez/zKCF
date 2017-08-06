@@ -367,7 +367,7 @@ namespace zkcf {
                 LearningRate = 0.005;
                 Sigma = 0.4;
                 OutputSigmaFactor = 0.1;
-                Feature=new HogLabFeature(KernelType,CellSize);
+                Feature=new HogLabFeature(KernelType);
                 break;
             case IFeature::RAW:
                 LearningRate = 0.075;
@@ -377,7 +377,7 @@ namespace zkcf {
         }
         Kernel=Feature->Kernel;
         if(EnableScale) {
-            TemplateSize=TEMPLATE_SIZE_SCALE;
+            TemplateSize=TEMPLATE_SIZE_FIXED;
             ScaleStep = 1.05;
             ScaleWeight = 0.95;
         }
@@ -391,8 +391,6 @@ namespace zkcf {
         _tmpl = getFeatures(frm, 1);
         _prob = createGaussianPeak(size_patch[0], size_patch[1]);
         _alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-        //_num = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-        //_den = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
         train(_tmpl, 1.0); // train with initial frame
     }
 }
