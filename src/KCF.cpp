@@ -9,8 +9,9 @@
 #include "labdata.hpp"
 
 namespace zkcf {
+    using namespace cv;
 // Update position based on the new frame
-    cv::Rect KCF::update(cv::Mat image) {
+    Rect KCF::update(Mat image) {
         if (Roi.x + Roi.width <= 0) Roi.x = -Roi.width + 1;
         if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 1;
         if (Roi.x >= image.cols - 1) Roi.x = image.cols - 2;
@@ -21,12 +22,12 @@ namespace zkcf {
 
 
         float peak_value;
-        cv::Point2f res = detect(X, GetFeatures(image, 0, 1.0f), peak_value);
+        Point2f res = detect(X, GetFeatures(image, 0, 1.0f), peak_value);
 
         if (ScaleStep != 1) {
             // Test at a smaller _scale
             float new_peak_value;
-            cv::Point2f new_res = detect(X, GetFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
+            Point2f new_res = detect(X, GetFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
 
             if (ScaleWeight * new_peak_value > peak_value) {
                 res = new_res;
@@ -58,7 +59,7 @@ namespace zkcf {
         if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 2;
 
         assert(Roi.width >= 0 && Roi.height >= 0);
-        cv::Mat x = GetFeatures(image, 0);
+        Mat x = GetFeatures(image, 0);
         train(x, LearningRate);
 
         return Roi;
@@ -66,20 +67,20 @@ namespace zkcf {
 
 
 // Detect object in the current frame.
-    cv::Point2f KCF::detect(cv::Mat z, cv::Mat x, float &peak_value) {
+    Point2f KCF::detect(Mat z, Mat x, float &peak_value) {
         using namespace FFTTools;
 
-        cv::Mat k = gaussianCorrelation(x, z);
-        cv::Mat res = (real(fftd(complexMultiplication(_alphaf, fftd(k)), true)));
+        Mat k = gaussianCorrelation(x, z);
+        Mat res = (real(fftd(complexMultiplication(_alphaf, fftd(k)), true)));
 
         //minMaxLoc only accepts doubles for the peak, and integer points for the coordinates
-        cv::Point2i pi;
+        Point2i pi;
         double pv;
-        cv::minMaxLoc(res, NULL, &pv, NULL, &pi);
+        minMaxLoc(res, NULL, &pv, NULL, &pi);
         peak_value = (float) pv;
 
         //subpixel peak estimation, coordinates will be non-integer
-        cv::Point2f p((float) pi.x, (float) pi.y);
+        Point2f p((float) pi.x, (float) pi.y);
 
         if (pi.x > 0 && pi.x < res.cols - 1) {
             p.x += subPixelPeak(res.at<float>(pi.y, pi.x - 1), peak_value, res.at<float>(pi.y, pi.x + 1));
@@ -96,19 +97,19 @@ namespace zkcf {
     }
 
 // train tracker with a single image
-    void KCF::train(cv::Mat x, float train_interp_factor) {
+    void KCF::train(Mat x, float train_interp_factor) {
         using namespace FFTTools;
 
-        cv::Mat k = gaussianCorrelation(x, x);
-        cv::Mat alphaf = complexDivision(_prob, (fftd(k) + Lambda));
+        Mat k = gaussianCorrelation(x, x);
+        Mat alphaf = complexDivision(_prob, (fftd(k) + Lambda));
 
         X = (1 - train_interp_factor) * X + (train_interp_factor) * x;
         _alphaf = (1 - train_interp_factor) * _alphaf + (train_interp_factor) * alphaf;
 
 
-        /*cv::Mat kf = fftd(gaussianCorrelation(x, x));
-        cv::Mat num = complexMultiplication(kf, _prob);
-        cv::Mat den = complexMultiplication(kf, kf + lambda);
+        /*Mat kf = fftd(gaussianCorrelation(x, x));
+        Mat num = complexMultiplication(kf, _prob);
+        Mat den = complexMultiplication(kf, kf + lambda);
 
         _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
         _num = (1 - train_interp_factor) * _num + (train_interp_factor) * num;
@@ -119,19 +120,19 @@ namespace zkcf {
     }
 
 // Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, which must both be MxN. They must    also be periodic (ie., pre-processed with a cosine window).
-    cv::Mat KCF::gaussianCorrelation(cv::Mat x1, cv::Mat x2) {
+    Mat KCF::gaussianCorrelation(Mat x1, Mat x2) {
         using namespace FFTTools;
-        cv::Mat c = cv::Mat(cv::Size(size_patch[1], size_patch[0]), CV_32F, cv::Scalar(0));
+        Mat c = Mat(Size(size_patch[1], size_patch[0]), CV_32F, Scalar(0));
         // HOG features
         if (_hogfeatures) {
-            cv::Mat caux;
-            cv::Mat x1aux;
-            cv::Mat x2aux;
+            Mat caux;
+            Mat x1aux;
+            Mat x2aux;
             for (int i = 0; i < size_patch[2]; i++) {
-                x1aux = x1.row(i);   // Procedure do deal with cv::Mat multichannel bug
+                x1aux = x1.row(i);   // Procedure do deal with Mat multichannel bug
                 x1aux = x1aux.reshape(1, size_patch[0]);
                 x2aux = x2.row(i).reshape(1, size_patch[0]);
-                cv::mulSpectrums(fftd(x1aux), fftd(x2aux), caux, 0, true);
+                mulSpectrums(fftd(x1aux), fftd(x2aux), caux, 0, true);
                 caux = fftd(caux, true);
                 rearrange(caux);
                 caux.convertTo(caux, CV_32F);
@@ -140,23 +141,23 @@ namespace zkcf {
         }
             // Gray features
         else {
-            cv::mulSpectrums(fftd(x1), fftd(x2), c, 0, true);
+            mulSpectrums(fftd(x1), fftd(x2), c, 0, true);
             c = fftd(c, true);
             rearrange(c);
             c = real(c);
         }
-        cv::Mat d;
-        cv::max(((cv::sum(x1.mul(x1))[0] + cv::sum(x2.mul(x2))[0]) - 2. * c) /
+        Mat d;
+        max(((sum(x1.mul(x1))[0] + sum(x2.mul(x2))[0]) - 2. * c) /
                 (size_patch[0] * size_patch[1] * size_patch[2]), 0, d);
 
-        cv::Mat k;
-        cv::exp((-d / (Sigma * Sigma)), k);
+        Mat k;
+        exp((-d / (Sigma * Sigma)), k);
         return k;
     }
 
 // Create Gaussian Peak. Function called only in the first frame.
-    cv::Mat KCF::createGaussianPeak(int sizey, int sizex) {
-        cv::Mat_<float> res(sizey, sizex);
+    Mat KCF::createGaussianPeak(int sizey, int sizex) {
+        Mat_<float> res(sizey, sizex);
 
         int syh = (sizey) / 2;
         int sxh = (sizex) / 2;
@@ -174,8 +175,8 @@ namespace zkcf {
     }
 
 // Obtain sub-window from image, with replication-padding and extract features
-    cv::Mat KCF::GetFeatures(const cv::Mat &patch) const {
-        cv::Rect paddedRoi;
+    Mat KCF::GetFeatures(const Mat &patch) const {
+        Rect paddedRoi;
 
         float cx = Roi.x + Roi.width / 2;
         float cy = Roi.y + Roi.height / 2;
@@ -201,7 +202,7 @@ namespace zkcf {
             scale = 1;
         }
         else {
-            CV_Error(Error::Code::StsInternal ,"Unknown template mode.");
+            std::cout<<"Unknown template mode."<<std::endl;
         }
 
         tmplSz.width=(tmplSz.width/2)*2;
@@ -223,78 +224,16 @@ namespace zkcf {
         paddedRoi.x = cx - paddedRoi.width / 2;
         paddedRoi.y = cy - paddedRoi.height / 2;
 
-        cv::Mat FeaturesMap;
-        cv::Mat z = RectTools::subwindow(patch, paddedRoi, cv::BORDER_REPLICATE);
-
-        if (z.cols != _tmpl_sz.width || z.rows != _tmpl_sz.height) {
-            cv::resize(z, z, _tmpl_sz);
-        }
+        Mat z = RectTools::subwindow(patch, paddedRoi, BORDER_REPLICATE);
+        resize(z, z, tmplSz);
+        IFeature::Sz featSz;
+        Mat feat=Feature->Extract(z,featSz);
 
         // HOG features
         if (_hogfeatures) {
-            IplImage z_ipl = z;
-            CvLSVMFeatureMapCaskade *map;
-            getFeatureMaps(&z_ipl, CellSize, &map);
-            normalizeAndTruncate(map, 0.2f);
-            PCAFeatureMaps(map);
-            size_patch[0] = map->sizeY;
-            size_patch[1] = map->sizeX;
-            size_patch[2] = map->numFeatures;
-
-            FeaturesMap = cv::Mat(cv::Size(map->numFeatures, map->sizeX * map->sizeY), CV_32F,
-                                  map->map);  // Procedure do deal with cv::Mat multichannel bug
-            FeaturesMap = FeaturesMap.t();
-            freeFeatureMapObject(&map);
-
-            // Lab features
-            if (_labfeatures) {
-                cv::Mat imgLab;
-                cvtColor(z, imgLab, CV_BGR2Lab);
-                unsigned char *input = (unsigned char *) (imgLab.data);
-
-                // Sparse output vector
-                cv::Mat outputLab = cv::Mat(LabCentroids.rows, size_patch[0] * size_patch[1], CV_32F, float(0));
-
-                int cntCell = 0;
-                // Iterate through each cell
-                for (int cY = CellSize; cY < z.rows - CellSize; cY += CellSize) {
-                    for (int cX = CellSize; cX < z.cols - CellSize; cX += CellSize) {
-                        // Iterate through each pixel of cell (cX,cY)
-                        for (int y = cY; y < cY + CellSize; ++y) {
-                            for (int x = cX; x < cX + CellSize; ++x) {
-                                // Lab components for each pixel
-                                float l = (float) input[(z.cols * y + x) * 3];
-                                float a = (float) input[(z.cols * y + x) * 3 + 1];
-                                float b = (float) input[(z.cols * y + x) * 3 + 2];
-
-                                // Iterate trough each centroid
-                                float minDist = FLT_MAX;
-                                int minIdx = 0;
-                                float *inputCentroid = (float *) (LabCentroids.data);
-                                for (int k = 0; k < LabCentroids.rows; ++k) {
-                                    float dist = ((l - inputCentroid[3 * k]) * (l - inputCentroid[3 * k]))
-                                                 + ((a - inputCentroid[3 * k + 1]) * (a - inputCentroid[3 * k + 1]))
-                                                 + ((b - inputCentroid[3 * k + 2]) * (b - inputCentroid[3 * k + 2]));
-                                    if (dist < minDist) {
-                                        minDist = dist;
-                                        minIdx = k;
-                                    }
-                                }
-                                // Store result at output
-                                outputLab.at<float>(minIdx, cntCell) += 1.0 / (CellSize * CellSize);
-                                //((float*) outputLab.data)[minIdx * (size_patch[0]*size_patch[1]) + cntCell] += 1.0 / cell_sizeQ;
-                            }
-                        }
-                        cntCell++;
-                    }
-                }
-                // Update size_patch[2] and add features to FeaturesMap
-                size_patch[2] += LabCentroids.rows;
-                FeaturesMap.push_back(outputLab);
-            }
         } else {
-            FeaturesMap = RectTools::getGrayImage(z);
-            FeaturesMap -= (float) 0.5; // In Paper;
+            feat = RectTools::getGrayImage(z);
+            feat -= (float) 0.5; // In Paper;
             size_patch[0] = z.rows;
             size_patch[1] = z.cols;
             size_patch[2] = 1;
@@ -303,26 +242,26 @@ namespace zkcf {
         if (inithann) {
             createHanningMats();
         }
-        FeaturesMap = hann.mul(FeaturesMap);
-        return FeaturesMap;
+        feat = hann.mul(feat);
+        return feat;
     }
 
 // Initialize Hanning window. Function called only in the first frame.
     void KCF::createHanningMats() {
-        cv::Mat hann1t = cv::Mat(cv::Size(size_patch[1], 1), CV_32F, cv::Scalar(0));
-        cv::Mat hann2t = cv::Mat(cv::Size(1, size_patch[0]), CV_32F, cv::Scalar(0));
+        Mat hann1t = Mat(Size(size_patch[1], 1), CV_32F, Scalar(0));
+        Mat hann2t = Mat(Size(1, size_patch[0]), CV_32F, Scalar(0));
 
         for (int i = 0; i < hann1t.cols; i++)
             hann1t.at<float>(0, i) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann1t.cols - 1)));
         for (int i = 0; i < hann2t.rows; i++)
             hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
 
-        cv::Mat hann2d = hann2t * hann1t;
+        Mat hann2d = hann2t * hann1t;
         // HOG features
         if (_hogfeatures) {
-            cv::Mat hann1d = hann2d.reshape(1, 1); // Procedure do deal with cv::Mat multichannel bug
+            Mat hann1d = hann2d.reshape(1, 1); // Procedure do deal with Mat multichannel bug
 
-            hann = cv::Mat(cv::Size(size_patch[0] * size_patch[1], size_patch[2]), CV_32F, cv::Scalar(0));
+            hann = Mat(Size(size_patch[0] * size_patch[1], size_patch[2]), CV_32F, Scalar(0));
             for (int i = 0; i < size_patch[2]; i++) {
                 for (int j = 0; j < size_patch[0] * size_patch[1]; j++) {
                     hann.at<float>(i, j) = hann1d.at<float>(0, j);
@@ -387,7 +326,7 @@ namespace zkcf {
         Roi = roi;
         X = GetFeatures(frm, 1);
         _prob = createGaussianPeak(size_patch[0], size_patch[1]);
-        _alphaf = cv::Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
+        _alphaf = Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
         train(X, 1.0); // train with initial frame
     }
 }

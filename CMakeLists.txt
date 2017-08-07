@@ -10,7 +10,9 @@ set(src
         ${src_dir}/Run.cpp
         ${src_dir}/Kernel/GaussianKernel.cpp
         ${src_dir}/Feature/HogFeature.cpp
-        ${src_dir}/Feature/HogLabFeature.cpp )
+        ${src_dir}/Feature/HogLabFeature.cpp
+        ${src_dir}/Feature/RawFeature.cpp
+)
 
 set(include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(include
@@ -23,7 +25,9 @@ set(include
         ${include_dir}/Kernel/GaussianKernel.h
         ${include_dir}/Feature/IFeature.h
         ${include_dir}/Feature/HogFeature.h
-        ${include_dir}/Feature/HogLabFeature.h)
+        ${include_dir}/Feature/HogLabFeature.h
+        ${include_dir}/Feature/RawFeature.h
+)
 
 add_executable(zKCF ${src} ${include})
 target_include_directories(zKCF PRIVATE ${include_dir})

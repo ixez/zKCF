@@ -47,9 +47,7 @@
 /*                      Latent SVM prediction API                            */
 /*****************************************************************************/
 
-#ifndef _FHOG_H_
-#define _FHOG_H_
-
+#pragma once
 #include <stdio.h>
 //#include "_lsvmc_types.h"
 //#include "_lsvmc_error.h"
@@ -59,22 +57,7 @@
 #include "opencv2/imgproc/imgproc_c.h"
 
 
-//modified from "_lsvmc_types.h"
 
-// DataType: STRUCT featureMap
-// FEATURE MAP DESCRIPTION
-//   Rectangular map (sizeX x sizeY), 
-//   every cell stores feature vector (dimension = numFeatures)
-// map             - matrix of feature vectors
-//                   to set and get feature vectors (i,j) 
-//                   used formula map[(j * sizeX + i) * p + k], where
-//                   k - component of feature vector in cell (i, j)
-typedef struct{
-    int sizeX;
-    int sizeY;
-    int numFeatures;
-    float *map;
-} CvLSVMFeatureMapCaskade;
 
 
 #include "float.h"
@@ -117,6 +100,23 @@ typedef struct{
 #define FFT_ERROR -10
 #define LSVM_PARSER_FILE_NOT_FOUND -11
 
+namespace fhog {
+//modified from "_lsvmc_types.h"
+
+// DataType: STRUCT featureMap
+// FEATURE MAP DESCRIPTION
+//   Rectangular map (sizeX x sizeY),
+//   every cell stores feature vector (dimension = numFeatures)
+// map             - matrix of feature vectors
+//                   to set and get feature vectors (i,j)
+//                   used formula map[(j * sizeX + i) * p + k], where
+//                   k - component of feature vector in cell (i, j)
+    typedef struct {
+        int sizeX;
+        int sizeY;
+        int numFeatures;
+        float *map;
+    } CvLSVMFeatureMapCaskade;
 
 
 /*
@@ -132,7 +132,7 @@ typedef struct{
 // RESULT
 // Error status
 */
-int getFeatureMaps(const IplImage * image, const int k, CvLSVMFeatureMapCaskade **map);
+    int getFeatureMaps(const IplImage *image, const int k, CvLSVMFeatureMapCaskade **map);
 
 
 /*
@@ -148,7 +148,7 @@ int getFeatureMaps(const IplImage * image, const int k, CvLSVMFeatureMapCaskade 
 // RESULT
 // Error status
 */
-int normalizeAndTruncate(CvLSVMFeatureMapCaskade *map, const float alfa);
+    int normalizeAndTruncate(CvLSVMFeatureMapCaskade *map, const float alfa);
 
 /*
 // Feature map reduction
@@ -164,15 +164,14 @@ int normalizeAndTruncate(CvLSVMFeatureMapCaskade *map, const float alfa);
 // RESULT
 // Error status
 */
-int PCAFeatureMaps(CvLSVMFeatureMapCaskade *map);
+    int PCAFeatureMaps(CvLSVMFeatureMapCaskade *map);
 
 
 //modified from "lsvmc_routine.h"
 
-int allocFeatureMapObject(CvLSVMFeatureMapCaskade **obj, const int sizeX, const int sizeY,
-                          const int p);
+    int allocFeatureMapObject(CvLSVMFeatureMapCaskade **obj, const int sizeX, const int sizeY,
+                              const int p);
 
-int freeFeatureMapObject (CvLSVMFeatureMapCaskade **obj);
+    int freeFeatureMapObject(CvLSVMFeatureMapCaskade **obj);
 
-
-#endif
+}
