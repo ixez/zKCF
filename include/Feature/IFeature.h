@@ -1,9 +1,10 @@
 #pragma once
 #include "Kernel/IKernel.h"
 #include "Kernel/GaussianKernel.h"
-#include <opencv2/core/mat.hpp>
+#include <opencv2/opencv.hpp>
 
 namespace zkcf {
+    using namespace cv;
     class IFeature {
     public:
         typedef enum
@@ -14,6 +15,8 @@ namespace zkcf {
             RAW     = 4
         } Type;
 
+        typedef Vec3i Sz;   // Size
+
         virtual IFeature(IKernel::Type kt) {
             switch(kt) {
                 case IKernel::GAUSSIAN:
@@ -22,7 +25,7 @@ namespace zkcf {
             }
         }
 
-        virtual cv::Mat Extract(const cv::Mat& patch) const=0;
+        virtual Mat Extract(const Mat& patch, Sz& sz) const=0;
 
         IKernel* Kernel=nullptr;
         int CellSize = 1;

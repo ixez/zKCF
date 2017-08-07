@@ -116,7 +116,7 @@ inline cv::Mat subwindow(const cv::Mat &in, const cv::Rect & window, int borderT
 {
     cv::Rect cutWindow = window;
     RectTools::limit(cutWindow, in.cols, in.rows);
-    if (cutWindow.height <= 0 || cutWindow.width <= 0)assert(0); //return cv::Mat(window.height,window.width,in.type(),0) ;
+    if (cutWindow.height <= 0 || cutWindow.width <= 0) assert(0); //return cv::Mat(window.height,window.width,in.type(),0) ;
     cv::Rect border = RectTools::getBorder(window, cutWindow);
     cv::Mat res = in(cutWindow);
 

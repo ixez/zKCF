@@ -2,10 +2,11 @@
 
 #include "Feature/IFeature.h"
 namespace zkcf {
+    using namespace cv;
     class HogFeature : public IFeature {
     public:
         HogFeature(IKernel::Type kt);
-        cv::Mat Extract(const cv::Mat& patch) const override;
+        Mat Extract(const Mat& patch, Sz& sz) const override;
 
         int CellSize = 4;
     };
