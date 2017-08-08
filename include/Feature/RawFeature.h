@@ -1,14 +1,13 @@
-//
-// Created by zeke on 8/7/17.
-//
+#pragma once
 
-#ifndef ZKCF_RAWFEATURE_H
-#define ZKCF_RAWFEATURE_H
+#include "Feature/IFeature.h"
+namespace zkcf {
+    using namespace cv;
+    class RawFeature : public IFeature {
+    public:
+        RawFeature(IKernel::eType kt);
+        Mat Extract(const Mat& patch, sSz& sz) const override;
 
-
-class RawFeature {
-
-};
-
-
-#endif //ZKCF_RAWFEATURE_H
+        int CellSize = 1;
+    };
+}
