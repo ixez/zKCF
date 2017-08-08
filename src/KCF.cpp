@@ -2,6 +2,7 @@
 #include <Kernel/GaussianKernel.h>
 #include <Feature/HogFeature.h>
 #include <Feature/HogLabFeature.h>
+#include <Feature/IFeature.h>
 #include "KCF.h"
 #include "ffttools.hpp"
 #include "recttools.hpp"
@@ -22,12 +23,12 @@ namespace zkcf {
 
 
         float peak_value;
-        Point2f res = detect(X, GetFeatures(image, 0, 1.0f), peak_value);
+        Point2f res = detect(x, GetFeatures(image, 0, 1.0f), peak_value);
 
         if (ScaleStep != 1) {
             // Test at a smaller _scale
             float new_peak_value;
-            Point2f new_res = detect(X, GetFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
+            Point2f new_res = detect(x, GetFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
 
             if (ScaleWeight * new_peak_value > peak_value) {
                 res = new_res;
@@ -38,7 +39,7 @@ namespace zkcf {
             }
 
             // Test at a bigger _scale
-            new_res = detect(X, GetFeatures(image, 0, ScaleStep), new_peak_value);
+            new_res = detect(x, GetFeatures(image, 0, ScaleStep), new_peak_value);
 
             if (ScaleWeight * new_peak_value > peak_value) {
                 res = new_res;
@@ -71,7 +72,7 @@ namespace zkcf {
         using namespace FFTTools;
 
         Mat k = gaussianCorrelation(x, z);
-        Mat res = (real(fftd(complexMultiplication(_alphaf, fftd(k)), true)));
+        Mat res = (real(fftd(complexMultiplication(ModelAlphaF, fftd(k)), true)));
 
         //minMaxLoc only accepts doubles for the peak, and integer points for the coordinates
         Point2i pi;
@@ -96,86 +97,48 @@ namespace zkcf {
         return p;
     }
 
+    void KCF::ModelInit(const Mat& x) {
+        using namespace FFTTools;
+        Mat k = Kernel->Correlation(x, x, FeatSz);
+        Mat kf=fftd(k);
+        Mat alphaf = complexDivision(ModelYf, kf + Lambda));
+
+        ModelAlphaF = alphaf;
+        ModelXf=fftd(x);
+    }
 // train tracker with a single image
     void KCF::train(Mat x, float train_interp_factor) {
         using namespace FFTTools;
 
         Mat k = gaussianCorrelation(x, x);
-        Mat alphaf = complexDivision(_prob, (fftd(k) + Lambda));
+        Mat alphaf = complexDivision(ModelYf, (fftd(k) + Lambda));
 
-        X = (1 - train_interp_factor) * X + (train_interp_factor) * x;
-        _alphaf = (1 - train_interp_factor) * _alphaf + (train_interp_factor) * alphaf;
-
-
-        /*Mat kf = fftd(gaussianCorrelation(x, x));
-        Mat num = complexMultiplication(kf, _prob);
-        Mat den = complexMultiplication(kf, kf + lambda);
-
-        _tmpl = (1 - train_interp_factor) * _tmpl + (train_interp_factor) * x;
-        _num = (1 - train_interp_factor) * _num + (train_interp_factor) * num;
-        _den = (1 - train_interp_factor) * _den + (train_interp_factor) * den;
-
-        _alphaf = complexDivision(_num, _den);*/
-
-    }
-
-// Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, which must both be MxN. They must    also be periodic (ie., pre-processed with a cosine window).
-    Mat KCF::gaussianCorrelation(Mat x1, Mat x2) {
-        using namespace FFTTools;
-        Mat c = Mat(Size(size_patch[1], size_patch[0]), CV_32F, Scalar(0));
-        // HOG features
-        if (_hogfeatures) {
-            Mat caux;
-            Mat x1aux;
-            Mat x2aux;
-            for (int i = 0; i < size_patch[2]; i++) {
-                x1aux = x1.row(i);   // Procedure do deal with Mat multichannel bug
-                x1aux = x1aux.reshape(1, size_patch[0]);
-                x2aux = x2.row(i).reshape(1, size_patch[0]);
-                mulSpectrums(fftd(x1aux), fftd(x2aux), caux, 0, true);
-                caux = fftd(caux, true);
-                rearrange(caux);
-                caux.convertTo(caux, CV_32F);
-                c = c + real(caux);
-            }
-        }
-            // Gray features
-        else {
-            mulSpectrums(fftd(x1), fftd(x2), c, 0, true);
-            c = fftd(c, true);
-            rearrange(c);
-            c = real(c);
-        }
-        Mat d;
-        max(((sum(x1.mul(x1))[0] + sum(x2.mul(x2))[0]) - 2. * c) /
-                (size_patch[0] * size_patch[1] * size_patch[2]), 0, d);
-
-        Mat k;
-        exp((-d / (Sigma * Sigma)), k);
-        return k;
+        x = (1 - train_interp_factor) * x + (train_interp_factor) * x;
+        ModelAlphaF = (1 - train_interp_factor) * ModelAlphaF + (train_interp_factor) * alphaf;
     }
 
 // Create Gaussian Peak. Function called only in the first frame.
-    Mat KCF::createGaussianPeak(int sizey, int sizex) {
-        Mat_<float> res(sizey, sizex);
+    static Mat KCF::CalcGaussianMap(const IFeature::sSz& sz, float sigma) {
+        Mat_<float> res(sz.y, sz.x);
 
-        int syh = (sizey) / 2;
-        int sxh = (sizex) / 2;
+        int syh = (sz.y) / 2;
+        int sxh = (sz.x) / 2;
 
-        float output_sigma = std::sqrt((float) sizex * sizey) / Padding * OutputSigmaFactor;
-        float mult = -0.5 / (output_sigma * output_sigma);
 
-        for (int i = 0; i < sizey; i++)
-            for (int j = 0; j < sizex; j++) {
+        float mult = -0.5 / pow(sigma,2);
+
+        for (int i = 0; i < sz.y; i++) {
+            for (int j = 0; j < sz.x; j++) {
                 int ih = i - syh;
                 int jh = j - sxh;
                 res(i, j) = std::exp(mult * (float) (ih * ih + jh * jh));
             }
-        return FFTTools::fftd(res);
+        }
+        return res;
     }
 
-// Obtain sub-window from image, with replication-padding and extract features
-    Mat KCF::GetFeatures(const Mat &patch) const {
+    // TODO: make it static
+    Mat KCF::GetFeatures(const Mat &patch, IFeature::sSz& featSz) const {
         Rect paddedRoi;
 
         float cx = Roi.x + Roi.width / 2;
@@ -226,30 +189,14 @@ namespace zkcf {
 
         Mat z = RectTools::subwindow(patch, paddedRoi, BORDER_REPLICATE);
         resize(z, z, tmplSz);
-        IFeature::Sz featSz;
         Mat feat=Feature->Extract(z,featSz);
-
-        // HOG features
-        if (_hogfeatures) {
-        } else {
-            feat = RectTools::getGrayImage(z);
-            feat -= (float) 0.5; // In Paper;
-            size_patch[0] = z.rows;
-            size_patch[1] = z.cols;
-            size_patch[2] = 1;
-        }
-
-        if (inithann) {
-            createHanningMats();
-        }
-        feat = hann.mul(feat);
         return feat;
     }
 
 // Initialize Hanning window. Function called only in the first frame.
-    void KCF::createHanningMats() {
-        Mat hann1t = Mat(Size(size_patch[1], 1), CV_32F, Scalar(0));
-        Mat hann2t = Mat(Size(1, size_patch[0]), CV_32F, Scalar(0));
+    static Mat KCF::CalcHann(const IFeature::sSz &sz) {
+        Mat hann1t = Mat(Size(sz.x, 1), CV_32F, Scalar(0));
+        Mat hann2t = Mat(Size(1, sz.y), CV_32F, Scalar(0));
 
         for (int i = 0; i < hann1t.cols; i++)
             hann1t.at<float>(0, i) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann1t.cols - 1)));
@@ -257,20 +204,13 @@ namespace zkcf {
             hann2t.at<float>(i, 0) = 0.5 * (1 - std::cos(2 * 3.14159265358979323846 * i / (hann2t.rows - 1)));
 
         Mat hann2d = hann2t * hann1t;
-        // HOG features
-        if (_hogfeatures) {
-            Mat hann1d = hann2d.reshape(1, 1); // Procedure do deal with Mat multichannel bug
 
-            hann = Mat(Size(size_patch[0] * size_patch[1], size_patch[2]), CV_32F, Scalar(0));
-            for (int i = 0; i < size_patch[2]; i++) {
-                for (int j = 0; j < size_patch[0] * size_patch[1]; j++) {
-                    hann.at<float>(i, j) = hann1d.at<float>(0, j);
-                }
+        Mat hann1d = hann2d.reshape(1, 1);
+        Mat hann = Mat(Size(sz.y * sz.x, sz.cn), CV_32F, Scalar(0));
+        for (int i = 0; i < sz.cn; i++) {
+            for (int j = 0; j < sz.y * sz.x; j++) {
+                hann.at<float>(i, j) = hann1d.at<float>(0, j);
             }
-        }
-            // Gray features
-        else {
-            hann = hann2d;
         }
     }
 
@@ -284,7 +224,7 @@ namespace zkcf {
         return 0.5 * (right - left) / divisor;
     }
 
-    KCF::KCF(IFeature::Type ft, IKernel::Type kt) {
+    KCF::KCF(IFeature::eType ft, IKernel::eType kt) {
         FeatType=ft;
         KernelType=kt;
     }
@@ -296,18 +236,15 @@ namespace zkcf {
         switch(FeatType) {
             case IFeature::HOG:
                 LearningRate = 0.012;
-                Sigma = 0.6;
                 Feature=new HogFeature(KernelType);
                 break;
             case IFeature::HOG_LAB:
                 LearningRate = 0.005;
-                Sigma = 0.4;
                 OutputSigmaFactor = 0.1;
                 Feature=new HogLabFeature(KernelType);
                 break;
             case IFeature::RAW:
                 LearningRate = 0.075;
-                Sigma = 0.2;
 //                Feature=new RawFeature(KernelType,CellSize);
                 break;
         }
@@ -324,9 +261,15 @@ namespace zkcf {
 
         assert(roi.width >= 0 && roi.height >= 0);
         Roi = roi;
-        X = GetFeatures(frm, 1);
-        _prob = createGaussianPeak(size_patch[0], size_patch[1]);
-        _alphaf = Mat(size_patch[0], size_patch[1], CV_32FC2, float(0));
-        train(X, 1.0); // train with initial frame
+
+        Mat x = GetFeatures(frm, FeatSz);
+        Mat hann= CalcHann(FeatSz);
+        x = hann.mul(x);
+
+        float outputSigma = std::sqrt((float) FeatSz.y * FeatSz.x) / Padding * OutputSigmaFactor;
+        Mat y = CalcGaussianMap(FeatSz,outputSigma);
+
+        ModelYf=FFTTools::fftd(y);
+        ModelInit(x);
     }
 }

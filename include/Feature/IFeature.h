@@ -13,11 +13,15 @@ namespace zkcf {
             HOG_LAB = 2,
             GRAY    = 3,
             RAW     = 4
-        } Type;
+        } eType;
+        typedef struct
+        {
+            int y=0;
+            int x=0;
+            int cn=0;
+        } sSz;
 
-        typedef Vec3i Sz;   // Size
-
-        virtual IFeature(IKernel::Type kt) {
+        IFeature(IKernel::eType kt) {
             switch(kt) {
                 case IKernel::GAUSSIAN:
                     Kernel=new GaussianKernel;
@@ -25,7 +29,7 @@ namespace zkcf {
             }
         }
 
-        virtual Mat Extract(const Mat& patch, Sz& sz) const=0;
+        virtual Mat Extract(const Mat& patch, sSz& sz) const=0;
 
         IKernel* Kernel=nullptr;
         int CellSize = 1;

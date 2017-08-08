@@ -105,19 +105,15 @@ namespace zkcf {
         // Evaluates a Gaussian kernel with bandwidth SIGMA for all relative shifts between input images X and Y, which must both be MxN. They must    also be periodic (ie., pre-processed with a cosine window).
         Mat gaussianCorrelation(Mat x1, Mat x2);
 
-        // Create Gaussian Peak. Function called only in the first frame.
-        Mat createGaussianPeak(int sizey, int sizex);
-
         // Obtain sub-window from image, with replication-padding and extract features
 
 
         // Initialize Hanning window. Function called only in the first frame.
-        void createHanningMats();
+
 
         // Calculate sub-pixel peak for one dimension
         float subPixelPeak(float left, float center, float right);
 
-        Mat _alphaf;
         Mat _prob;
 
         Mat _num;
@@ -126,7 +122,7 @@ namespace zkcf {
 
     private:
         int size_patch[3];
-        Mat hann;
+
         Size _tmpl_sz;
         float _scale;
         int _gaussian_size;
@@ -134,9 +130,6 @@ namespace zkcf {
         bool _labfeatures;
 
     public:
-        KCF(IFeature::Type ft=IFeature::HOG, IKernel::Type kt=IKernel::GAUSSIAN);
-        void Init(const Mat &frm, Rect roi);
-
         bool EnableScale = true;
 
         typedef enum {
@@ -146,22 +139,35 @@ namespace zkcf {
         eTemplateMode TmplMode;
         int TmplLen = 96;          // Available when TEMPLATE_MODE_FIXED
 
+        KCF(IFeature::eType ft=IFeature::HOG, IKernel::eType kt=IKernel::GAUSSIAN);
+        void Init(const Mat &frm, Rect roi);
+
     private:
-        Mat GetFeatures(const Mat &patch) const;
 
         float LearningRate;
-        float Sigma;
         float Lambda;
         float Padding;
         float OutputSigmaFactor;
 
         Rect Roi;
 
-        IFeature::Type FeatType;
-        IKernel::Type KernelType;
+        IFeature::eType FeatType;
+        IKernel::eType KernelType;
         IFeature* Feature = nullptr;
         IKernel* Kernel = nullptr;
 
-        Mat X;
+        IFeature::sSz FeatSz;
+        Mat ModelYf;
+        Mat ModelAlphaF;
+        Mat ModelXf;
+
+        static Mat CalcHann(const IFeature::sSz &sz);
+        static Mat CalcGaussianMap(const IFeature::sSz& sz, float sigma);
+
+        void ModelInit(const Mat &x);
+        Mat GetFeatures(const Mat &patch, IFeature::sSz& featSz) const;
+
+
+
     };
 }

@@ -6,7 +6,7 @@ namespace zkcf {
     using namespace cv;
     class HogLabFeature : public HogFeature {
     public:
-        HogLabFeature(IKernel::Type kt);
+        HogLabFeature(IKernel::eType kt);
     private:
         Mat LabCentroids;
         const static int ClustersN = 15;
