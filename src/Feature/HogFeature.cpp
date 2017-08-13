@@ -1,20 +1,10 @@
-#include <Feature/IFeature.h>
+#include "Feature/IFeature.h"
 #include "Feature/HogFeature.h"
 #include "fhog.hpp"
 
 namespace zkcf {
     using namespace cv;
-    HogFeature::HogFeature(IKernel::eType kt) : IFeature(kt) {
-        switch(kt) {
-            case IKernel::GAUSSIAN:
-                ((GaussianKernel *)Kernel)->Sigma=0.6;
-                break;
-            default:
-                break;
-        }
-    }
-
-    Mat HogFeature::Extract(const Mat& patch, sSz& sz) const {
+    Mat HogFeature::Extract(const Mat& patch, FeatureSize& sz) const {
         using namespace fhog;
         IplImage z_ipl = patch;
         CvLSVMFeatureMapCaskade *map;

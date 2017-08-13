@@ -2,7 +2,7 @@
 #include "ffttools.hpp"
 
 namespace zkcf {
-    Mat GaussianKernel::Correlation(const Mat &x1, const Mat &x2, const IFeature::sSz &sz) const {
+    Mat GaussianKernel::Correlation(const Mat &x1, const Mat &x2, const FeatureSize &sz) const {
         using namespace FFTTools;
         Mat c = Mat(Size(sz.x, sz.y), CV_32F, Scalar(0));
 
