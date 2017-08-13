@@ -37,10 +37,6 @@ the use of this software, even if advised of the possibility of such damage.
 
 //#include <cv.h>
 
-#ifndef _OPENCV_FFTTOOLS_HPP_
-#define _OPENCV_FFTTOOLS_HPP_
-#endif
-
 //NOTE: FFTW support is still shaky, disabled for now.
 /*#ifdef USE_FFTW
 #include <fftw3.h>

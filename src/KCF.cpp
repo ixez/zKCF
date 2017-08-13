@@ -1,8 +1,3 @@
-#include <KCF.h>
-#include <Kernel/GaussianKernel.h>
-#include <Feature/HogFeature.h>
-#include <Feature/HogLabFeature.h>
-#include <Feature/IFeature.h>
 #include "KCF.h"
 #include "ffttools.hpp"
 #include "recttools.hpp"
@@ -13,55 +8,55 @@ namespace zkcf {
     using namespace cv;
 // Update position based on the new frame
     Rect KCF::update(Mat image) {
-        if (Roi.x + Roi.width <= 0) Roi.x = -Roi.width + 1;
-        if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 1;
-        if (Roi.x >= image.cols - 1) Roi.x = image.cols - 2;
-        if (Roi.y >= image.rows - 1) Roi.y = image.rows - 2;
-
-        float cx = Roi.x + Roi.width / 2.0f;
-        float cy = Roi.y + Roi.height / 2.0f;
-
-
-        float peak_value;
-        Point2f res = detect(x, GetFeatures(image, 0, 1.0f), peak_value);
-
-        if (ScaleStep != 1) {
-            // Test at a smaller _scale
-            float new_peak_value;
-            Point2f new_res = detect(x, GetFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
-
-            if (ScaleWeight * new_peak_value > peak_value) {
-                res = new_res;
-                peak_value = new_peak_value;
-                _scale /= ScaleStep;
-                Roi.width /= ScaleStep;
-                Roi.height /= ScaleStep;
-            }
-
-            // Test at a bigger _scale
-            new_res = detect(x, GetFeatures(image, 0, ScaleStep), new_peak_value);
-
-            if (ScaleWeight * new_peak_value > peak_value) {
-                res = new_res;
-                peak_value = new_peak_value;
-                _scale *= ScaleStep;
-                Roi.width *= ScaleStep;
-                Roi.height *= ScaleStep;
-            }
-        }
-
-        // Adjust by cell size and _scale
-        Roi.x = cx - Roi.width / 2.0f + ((float) res.x * CellSize * _scale);
-        Roi.y = cy - Roi.height / 2.0f + ((float) res.y * CellSize * _scale);
-
-        if (Roi.x >= image.cols - 1) Roi.x = image.cols - 1;
-        if (Roi.y >= image.rows - 1) Roi.y = image.rows - 1;
-        if (Roi.x + Roi.width <= 0) Roi.x = -Roi.width + 2;
-        if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 2;
-
-        assert(Roi.width >= 0 && Roi.height >= 0);
-        Mat x = GetFeatures(image, 0);
-        train(x, LearningRate);
+//        if (Roi.x + Roi.width <= 0) Roi.x = -Roi.width + 1;
+//        if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 1;
+//        if (Roi.x >= image.cols - 1) Roi.x = image.cols - 2;
+//        if (Roi.y >= image.rows - 1) Roi.y = image.rows - 2;
+//
+//        float cx = Roi.x + Roi.width / 2.0f;
+//        float cy = Roi.y + Roi.height / 2.0f;
+//
+//
+//        float peak_value;
+//        Point2f res = detect(x, GetFeatures(image, 0, 1.0f), peak_value);
+//
+//        if (ScaleStep != 1) {
+//            // Test at a smaller _scale
+//            float new_peak_value;
+//            Point2f new_res = detect(x, GetFeatures(image, 0, 1.0f / ScaleStep), new_peak_value);
+//
+//            if (ScaleWeight * new_peak_value > peak_value) {
+//                res = new_res;
+//                peak_value = new_peak_value;
+//                _scale /= ScaleStep;
+//                Roi.width /= ScaleStep;
+//                Roi.height /= ScaleStep;
+//            }
+//
+//            // Test at a bigger _scale
+//            new_res = detect(x, GetFeatures(image, 0, ScaleStep), new_peak_value);
+//
+//            if (ScaleWeight * new_peak_value > peak_value) {
+//                res = new_res;
+//                peak_value = new_peak_value;
+//                _scale *= ScaleStep;
+//                Roi.width *= ScaleStep;
+//                Roi.height *= ScaleStep;
+//            }
+//        }
+//
+//        // Adjust by cell size and _scale
+//        Roi.x = cx - Roi.width / 2.0f + ((float) res.x * CellSize * _scale);
+//        Roi.y = cy - Roi.height / 2.0f + ((float) res.y * CellSize * _scale);
+//
+//        if (Roi.x >= image.cols - 1) Roi.x = image.cols - 1;
+//        if (Roi.y >= image.rows - 1) Roi.y = image.rows - 1;
+//        if (Roi.x + Roi.width <= 0) Roi.x = -Roi.width + 2;
+//        if (Roi.y + Roi.height <= 0) Roi.y = -Roi.height + 2;
+//
+//        assert(Roi.width >= 0 && Roi.height >= 0);
+//        Mat x = GetFeatures(image, 0);
+//        train(x, LearningRate);
 
         return Roi;
     }
@@ -69,56 +64,57 @@ namespace zkcf {
 
 // Detect object in the current frame.
     Point2f KCF::detect(Mat z, Mat x, float &peak_value) {
-        using namespace FFTTools;
+//        using namespace FFTTools;
 
-        Mat k = gaussianCorrelation(x, z);
-        Mat res = (real(fftd(complexMultiplication(ModelAlphaF, fftd(k)), true)));
+//        Mat k = gaussianCorrelation(x, z);
+//        Mat res = (real(fftd(complexMultiplication(ModelAlphaF, fftd(k)), true)));
+//
+//        //minMaxLoc only accepts doubles for the peak, and integer points for the coordinates
+//        Point2i pi;
+//        double pv;
+//        minMaxLoc(res, NULL, &pv, NULL, &pi);
+//        peak_value = (float) pv;
+//
+//        //subpixel peak estimation, coordinates will be non-integer
+//        Point2f p((float) pi.x, (float) pi.y);
+//        Point2f p();
+//
+//        if (pi.x > 0 && pi.x < res.cols - 1) {
+//            p.x += subPixelPeak(res.at<float>(pi.y, pi.x - 1), peak_value, res.at<float>(pi.y, pi.x + 1));
+//        }
+//
+//        if (pi.y > 0 && pi.y < res.rows - 1) {
+//            p.y += subPixelPeak(res.at<float>(pi.y - 1, pi.x), peak_value, res.at<float>(pi.y + 1, pi.x));
+//        }
+//
+//        p.x -= (res.cols) / 2;
+//        p.y -= (res.rows) / 2;
 
-        //minMaxLoc only accepts doubles for the peak, and integer points for the coordinates
-        Point2i pi;
-        double pv;
-        minMaxLoc(res, NULL, &pv, NULL, &pi);
-        peak_value = (float) pv;
-
-        //subpixel peak estimation, coordinates will be non-integer
-        Point2f p((float) pi.x, (float) pi.y);
-
-        if (pi.x > 0 && pi.x < res.cols - 1) {
-            p.x += subPixelPeak(res.at<float>(pi.y, pi.x - 1), peak_value, res.at<float>(pi.y, pi.x + 1));
-        }
-
-        if (pi.y > 0 && pi.y < res.rows - 1) {
-            p.y += subPixelPeak(res.at<float>(pi.y - 1, pi.x), peak_value, res.at<float>(pi.y + 1, pi.x));
-        }
-
-        p.x -= (res.cols) / 2;
-        p.y -= (res.rows) / 2;
-
-        return p;
+        return Point2f();
     }
 
     void KCF::ModelInit(const Mat& x) {
-        using namespace FFTTools;
         Mat k = Kernel->Correlation(x, x, FeatSz);
-        Mat kf=fftd(k);
-        Mat alphaf = complexDivision(ModelYf, kf + Lambda));
+        Mat kf=FFTTools::fftd(k);
+        Mat alphaf = FFTTools::complexDivision(ModelYf, kf + Lambda);
 
         ModelAlphaF = alphaf;
-        ModelXf=fftd(x);
+        ModelXf=FFTTools::fftd(x);
     }
+
 // train tracker with a single image
     void KCF::train(Mat x, float train_interp_factor) {
         using namespace FFTTools;
 
-        Mat k = gaussianCorrelation(x, x);
-        Mat alphaf = complexDivision(ModelYf, (fftd(k) + Lambda));
-
-        x = (1 - train_interp_factor) * x + (train_interp_factor) * x;
-        ModelAlphaF = (1 - train_interp_factor) * ModelAlphaF + (train_interp_factor) * alphaf;
+//        Mat k = gaussianCorrelation(x, x);
+//        Mat alphaf = complexDivision(ModelYf, (fftd(k) + Lambda));
+//
+//        x = (1 - train_interp_factor) * x + (train_interp_factor) * x;
+//        ModelAlphaF = (1 - train_interp_factor) * ModelAlphaF + (train_interp_factor) * alphaf;
     }
 
 // Create Gaussian Peak. Function called only in the first frame.
-    static Mat KCF::CalcGaussianMap(const IFeature::sSz& sz, float sigma) {
+    Mat KCF::CalcGaussianMap(const FeatureSize& sz, float sigma) {
         Mat_<float> res(sz.y, sz.x);
 
         int syh = (sz.y) / 2;
@@ -138,7 +134,7 @@ namespace zkcf {
     }
 
     // TODO: make it static
-    Mat KCF::GetFeatures(const Mat &patch, IFeature::sSz& featSz) const {
+    Mat KCF::GetFeatures(const Mat &patch, FeatureSize& featSz) const {
         Rect paddedRoi;
 
         float cx = Roi.x + Roi.width / 2;
@@ -171,7 +167,7 @@ namespace zkcf {
         tmplSz.width=(tmplSz.width/2)*2;
         tmplSz.height=(tmplSz.height/2)*2;
 
-        if(FeatType==IFeature::HOG || FeatType==IFeature::HOG_LAB) {
+        if(FeatType==FEAT_HOG || FeatType==FEAT_HOG_LAB) {
             // Round to cell size and also make it even
             tmplSz.width+=Feature->CellSize*2;
             tmplSz.height+=Feature->CellSize*2;
@@ -194,7 +190,7 @@ namespace zkcf {
     }
 
 // Initialize Hanning window. Function called only in the first frame.
-    static Mat KCF::CalcHann(const IFeature::sSz &sz) {
+    Mat KCF::CalcHann(const FeatureSize &sz) {
         Mat hann1t = Mat(Size(sz.x, 1), CV_32F, Scalar(0));
         Mat hann2t = Mat(Size(1, sz.y), CV_32F, Scalar(0));
 
@@ -224,9 +220,9 @@ namespace zkcf {
         return 0.5 * (right - left) / divisor;
     }
 
-    KCF::KCF(IFeature::eType ft, IKernel::eType kt) {
+    KCF::KCF(FeatureType ft, KernelType kt) {
         FeatType=ft;
-        KernelType=kt;
+        KrnlType=kt;
     }
 
     void KCF::Init(const Mat &frm, Rect roi) {
@@ -234,21 +230,21 @@ namespace zkcf {
         Padding = 2.5;
         OutputSigmaFactor = 0.125;
         switch(FeatType) {
-            case IFeature::HOG:
+            case FEAT_HOG:
                 LearningRate = 0.012;
-                Feature=new HogFeature(KernelType);
+//                Feature=new HogFeature(KrnlType);
                 break;
-            case IFeature::HOG_LAB:
+            case FEAT_HOG_LAB:
                 LearningRate = 0.005;
                 OutputSigmaFactor = 0.1;
-                Feature=new HogLabFeature(KernelType);
+//                Feature=new HogLabFeature(KrnlType);
                 break;
-            case IFeature::RAW:
+            case FEAT_RAW:
                 LearningRate = 0.075;
 //                Feature=new RawFeature(KernelType,CellSize);
                 break;
         }
-        Kernel=Feature->Kernel;
+//        Kernel=Feature->Kernel;
         if(EnableScale) {
             TmplMode=TMPL_MODE_FIXED;
             ScaleStep = 1.05;

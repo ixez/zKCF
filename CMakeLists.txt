@@ -8,6 +8,9 @@ set(src
         ${src_dir}/fhog.cpp
         ${src_dir}/KCF.cpp
         ${src_dir}/Run.cpp
+
+        ${src_dir}/FkFactory.cpp
+
         ${src_dir}/Kernel/GaussianKernel.cpp
         ${src_dir}/Feature/HogFeature.cpp
         ${src_dir}/Feature/HogLabFeature.cpp
@@ -21,8 +24,13 @@ set(include
         ${include_dir}/labdata.hpp
         ${include_dir}/recttools.hpp
         ${include_dir}/ffttools.hpp
+
+        ${include_dir}/Def.h
+        ${include_dir}/FkFactory.h
+
         ${include_dir}/Kernel/IKernel.h
         ${include_dir}/Kernel/GaussianKernel.h
+
         ${include_dir}/Feature/IFeature.h
         ${include_dir}/Feature/HogFeature.h
         ${include_dir}/Feature/HogLabFeature.h
