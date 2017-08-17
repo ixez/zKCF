@@ -73,8 +73,8 @@ namespace zkcf {
 
         FeatureType FeatType;
         KernelType KrnlType;
-        IFeature* Feature = nullptr;
-        IKernel* Kernel = nullptr;
+        IFeature* Feat = nullptr;
+        IKernel* Krnl = nullptr;
 
         FeatureSize FeatSz;
         Mat ModelYf;

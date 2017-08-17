@@ -11,7 +11,7 @@
 #include "Kernel/GaussianKernel.h"
 
 namespace zkcf {
-    void FkFactory(FeatureType ft, KernelType kt, IFeature* f, IKernel* k) {
+    void FkFactory(FeatureType ft, KernelType kt, IFeature*& f, IKernel*& k) {
         switch (ft) {
             case FEAT_HOG:
                 f = new HogFeature();
@@ -27,6 +27,7 @@ namespace zkcf {
         }
         switch (kt) {
             case KRNL_GAUSSIAN:
+                k=new GaussianKernel;
                 if(ft == FEAT_HOG) {
                     ((GaussianKernel *)k)->Sigma = 0.6;
                 }

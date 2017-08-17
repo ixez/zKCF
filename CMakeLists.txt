@@ -6,6 +6,7 @@ find_package(OpenCV REQUIRED)
 set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(src
         ${src_dir}/fhog.cpp
+        ${src_dir}/FFTTools.cpp
         ${src_dir}/KCF.cpp
         ${src_dir}/Run.cpp
 
@@ -23,7 +24,7 @@ set(include
         ${include_dir}/fhog.hpp
         ${include_dir}/labdata.hpp
         ${include_dir}/recttools.hpp
-        ${include_dir}/ffttools.hpp
+        ${include_dir}/FFTTools.hpp
 
         ${include_dir}/Def.h
         ${include_dir}/FkFactory.h
