@@ -18,5 +18,6 @@ namespace zkcf {
 
         feat = feat.t();
         freeFeatureMapObject(&map);
+        return feat;
     }
 }

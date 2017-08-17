@@ -1,5 +1,5 @@
 #include "Kernel/GaussianKernel.h"
-#include "ffttools.hpp"
+#include "FFTTools.hpp"
 
 namespace zkcf {
     Mat GaussianKernel::Correlation(const Mat &x1, const Mat &x2, const FeatureSize &sz) const {

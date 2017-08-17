@@ -1,5 +1,6 @@
+#include <FkFactory.h>
 #include "KCF.h"
-#include "ffttools.hpp"
+#include "FFTTools.hpp"
 #include "recttools.hpp"
 #include "fhog.hpp"
 #include "labdata.hpp"
@@ -94,7 +95,7 @@ namespace zkcf {
     }
 
     void KCF::ModelInit(const Mat& x) {
-        Mat k = Kernel->Correlation(x, x, FeatSz);
+        Mat k = Krnl->Correlation(x, x, FeatSz);
         Mat kf=FFTTools::fftd(k);
         Mat alphaf = FFTTools::complexDivision(ModelYf, kf + Lambda);
 
@@ -169,8 +170,8 @@ namespace zkcf {
 
         if(FeatType==FEAT_HOG || FeatType==FEAT_HOG_LAB) {
             // Round to cell size and also make it even
-            tmplSz.width+=Feature->CellSize*2;
-            tmplSz.height+=Feature->CellSize*2;
+            tmplSz.width+=Feat->CellSize*2;
+            tmplSz.height+=Feat->CellSize*2;
         }
         else {
             //Make number of pixels even (helps with some logic involving half-dimensions)
@@ -185,7 +186,7 @@ namespace zkcf {
 
         Mat z = RectTools::subwindow(patch, paddedRoi, BORDER_REPLICATE);
         resize(z, z, tmplSz);
-        Mat feat=Feature->Extract(z,featSz);
+        Mat feat=Feat->Extract(z,featSz);
         return feat;
     }
 
@@ -208,6 +209,7 @@ namespace zkcf {
                 hann.at<float>(i, j) = hann1d.at<float>(0, j);
             }
         }
+        return hann;
     }
 
 // Calculate sub-pixel peak for one dimension
@@ -232,19 +234,16 @@ namespace zkcf {
         switch(FeatType) {
             case FEAT_HOG:
                 LearningRate = 0.012;
-//                Feature=new HogFeature(KrnlType);
                 break;
             case FEAT_HOG_LAB:
                 LearningRate = 0.005;
                 OutputSigmaFactor = 0.1;
-//                Feature=new HogLabFeature(KrnlType);
                 break;
             case FEAT_RAW:
                 LearningRate = 0.075;
-//                Feature=new RawFeature(KernelType,CellSize);
                 break;
         }
-//        Kernel=Feature->Kernel;
+        FkFactory(FeatType,KrnlType,Feat,Krnl);
         if(EnableScale) {
             TmplMode=TMPL_MODE_FIXED;
             ScaleStep = 1.05;
