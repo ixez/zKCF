@@ -11,9 +11,9 @@ namespace zkcf {
         getFeatureMaps(&z_ipl, CellSize, &map);
         normalizeAndTruncate(map, 0.2f);
         PCAFeatureMaps(map);
-        sz.y = map->sizeY;
-        sz.x = map->sizeX;
-        sz.cn = map->numFeatures;
+        sz.rows = map->sizeY;
+        sz.cols = map->sizeX;
+        sz.cns = map->numFeatures;
         Mat feat = Mat(Size(map->numFeatures, map->sizeX * map->sizeY), CV_32F, map->map);
 
         feat = feat.t();

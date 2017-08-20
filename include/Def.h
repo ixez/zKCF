@@ -1,9 +1,9 @@
 #pragma once
 namespace zkcf {
     typedef struct {
-        int y = 0;
-        int x = 0;
-        int cn = 0;
+        int rows = 0;
+        int cols = 0;
+        int cns = 0;
     } FeatureSize;
 
     typedef enum {

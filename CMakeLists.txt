@@ -20,6 +20,7 @@ set(src
 
 set(include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(include
+        ${include_dir}/ITracker.h
         ${include_dir}/KCF.h
         ${include_dir}/fhog.hpp
         ${include_dir}/labdata.hpp
