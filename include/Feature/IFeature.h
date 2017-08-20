@@ -8,6 +8,7 @@ namespace zkcf {
 
     class IFeature {
     public:
+        // Extract feature maps in r x c x d maps encoded in d x (r*c) Mat.
         virtual Mat Extract(const Mat& patch, FeatureSize& sz) const=0;
         int CellSize = 1;
     };
