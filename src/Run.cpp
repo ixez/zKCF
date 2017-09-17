@@ -3,9 +3,11 @@
 int main(int argc, char* argv[])
 {
     using namespace cv;
+    using namespace zkcf;
     int startFrm=atoi(argv[2]), endFrm=atoi(argv[3]);
 
-	zkcf::KCF tracker;
+//    KCF tracker;
+    KCF tracker(FeatureType::FEAT_RAW);
 	bool pause = false;
     for(int i=startFrm;i<endFrm;i++) {
         char path[500];

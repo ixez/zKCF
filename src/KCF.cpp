@@ -27,8 +27,8 @@ namespace zkcf {
     void KCF::ExtractFeatures(const Mat &frm, const Rect &roi, Mat& feat, FeatureSize &featSz) const {
         Rect paddedRoi;
 
-        float cx = roi.x + roi.width / 2;
-        float cy = roi.y + roi.height / 2;
+        float cx = roi.x + roi.width / 2.0f;
+        float cy = roi.y + roi.height / 2.0f;
 
         int paddedW = roi.width * Padding;
         int paddedH = roi.height * Padding;
@@ -45,7 +45,7 @@ namespace zkcf {
             tmplSz.width = paddedW / scale;
             tmplSz.height = paddedH / scale;
         }
-        else if(TmplMode==TMPL_MODE_NONE) {  //No template size given, use ROI size
+        else if(TmplMode==TMPL_MODE_ROI_SZ) {  //No template size given, use ROI size
             tmplSz.width = paddedW;
             tmplSz.height = paddedH;
             scale = 1;
@@ -152,8 +152,8 @@ namespace zkcf {
 
         float outputSigma = std::sqrt((float) FeatSz.rows * FeatSz.cols) / Padding * OutputSigmaFactor;
         Mat y = CalcGaussianMap(FeatSz,outputSigma);
-
         ModelY_f=FFTTools::fftd(y);
+
         ModelInit(x);
         return true;
     }
@@ -251,8 +251,14 @@ namespace zkcf {
 
         Mat alpha_f = complexDivision(ModelY_f, k_f + Lambda);
 
-        ModelAlpha_f    = (1 - lr) * ModelAlpha_f   + lr * alpha_f;
-        ModelX          = (1 - lr) * ModelX         + lr * x;
+        if(lr==1) {
+            ModelAlpha_f    = alpha_f;
+            ModelX          = x;
+        }
+        else {
+            ModelAlpha_f    = (1 - lr) * ModelAlpha_f   + lr * alpha_f;
+            ModelX          = (1 - lr) * ModelX         + lr * x;
+        }
     }
 
     void KCF::ModelUpdate(const Mat &x) {

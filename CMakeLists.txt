@@ -43,6 +43,11 @@ add_executable(zKCF ${src} ${include})
 target_include_directories(zKCF PRIVATE ${include_dir})
 target_link_libraries(zKCF ${OpenCV_LIBS})
 
+set_target_properties(zKCF PROPERTIES
+        CXX_STANDARD 11
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+)
 
 
 
