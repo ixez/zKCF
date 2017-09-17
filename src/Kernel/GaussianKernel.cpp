@@ -23,7 +23,7 @@ namespace zkcf {
         max(((sum(x1.mul(x1))[0] + sum(x2.mul(x2))[0]) - 2. * c) / (sz.rows * sz.cols * sz.cns), 0, d);
 
         Mat k;
-        exp(-1 / (Sigma * Sigma) * d, k);
+        exp(-d / (Sigma * Sigma), k);
         return k;
     }
 }
