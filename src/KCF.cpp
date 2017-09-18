@@ -74,7 +74,7 @@ namespace zkcf {
         paddedRoi.y = cy - paddedRoi.height / 2;
 
         Mat z = RectTools::subwindow(frm, paddedRoi, BORDER_REPLICATE);
-        resize(z, z, tmplSz);
+        if(z.size()!=tmplSz) resize(z, z, tmplSz);
         feat=Feat->Extract(z,featSz);
     }
 
