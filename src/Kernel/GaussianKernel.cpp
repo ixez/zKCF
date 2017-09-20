@@ -19,6 +19,11 @@ namespace zkcf {
             c = c + real(caux);
         }
 
+//        cv::mulSpectrums(fftd(x1.reshape(1, sz.rows)), fftd(x2.reshape(1, sz.rows)), c, 0, true);
+//        c = fftd(c, true);
+//        rearrange(c);
+//        c = real(c);
+
         Mat d;
         max(((sum(x1.mul(x1))[0] + sum(x2.mul(x2))[0]) - 2. * c) / (sz.rows * sz.cols * sz.cns), 0, d);
 
