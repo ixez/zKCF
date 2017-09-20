@@ -177,6 +177,9 @@ namespace zkcf {
         float pv;
         Mat z;
         ExtractFeatures(frm, roi, z , FeatSz);
+        // TODO: Remove unnecessary calculation of hann
+        Mat hann = CalcHann(FeatSz);
+        z = hann.mul(z);
         Point2f res = Detect(ModelX, z, pv);
         if(EnableScale) {
             // TODO: To handle scaling problem
@@ -211,7 +214,7 @@ namespace zkcf {
     Point2f KCF::Detect(const Mat &x, const Mat &z, float &pv) const{
         using namespace FFTTools;
 
-        Mat res = EvalResMap(z,x);
+        Mat res = EvalResMap(x,z);
         Point2i _pl;
         double _pv;
         minMaxLoc(res, NULL, &_pv, NULL, &_pl);
@@ -228,6 +231,8 @@ namespace zkcf {
 
         pl.x -= (res.cols) / 2;
         pl.y -= (res.rows) / 2;
+
+        std::cout<<pl<<std::endl;
 
         return pl;
     }
