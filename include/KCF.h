@@ -13,7 +13,7 @@ namespace zkcf {
         bool EnableScale = true;
 
         typedef enum {
-            TMPL_MODE_FIXED = 1,   // Longer edge will resize to this length and exctract features
+            TMPL_MODE_CUSTOM = 1,     // Longer edge will resize to this length and exctract features
             TMPL_MODE_ROI_SZ = 0     // Not resize, keep size
         } eTemplateMode;
         eTemplateMode TmplMode;
@@ -35,7 +35,12 @@ namespace zkcf {
         float Padding;
         float OutputSigmaFactor;
 
-        Rect Roi;
+        // padded_sz / TemplLen
+        float TmplRatio;
+        // Padded roi will be resize to this template size and then be extracted feature
+        Size TmplSz;
+
+        Rect_<float> Roi;
 
         FeatureType FeatType;
         KernelType KrnlType;
@@ -51,12 +56,14 @@ namespace zkcf {
         static Mat CalcGaussianMap(const FeatureSize& sz, float sigma);         // Generate Gaussian Peak. Function called only in the first frame.
         static float CalcSubPixelPeak(float left, float center, float right);   // Calculate sub-pixel peak for one dimension
 
+        void TmplInit();   //  Part of Init()
+
         void ModelInit(const Mat &x);
         void ModelUpdate(const Mat &x);
         void ModelUpdate(const Mat &x, float lr);
 
         // Extract feature maps of roi which is padded and resized to specified template size.
-        void ExtractFeatures(const Mat &frm, const Rect &roi, CV_OUT Mat& feat, CV_OUT FeatureSize &featSz) const;
+        void ExtractFeatures(const Mat &frm, const Rect_<float> &roi, CV_OUT Mat &feat, CV_OUT FeatureSize &featSz) const;
 
         // Eval response map, x => tmpl, z => test image patch
         Mat EvalResMap(const Mat &x, const Mat &z) const;

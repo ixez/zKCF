@@ -16,9 +16,9 @@ int main(int argc, char* argv[])
         if (i == startFrm) {
             tracker.Init(frm, Rect(atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7])));
         } else {
-            Rect res = tracker.Track(frm);
+            Rect r = tracker.Track(frm);
             Mat render = frm.clone();
-            rectangle(render, res, CV_RGB(0, 255, 0), 3);
+            rectangle(render, r, CV_RGB(0, 255, 0), 3);
             imshow("show", render);
 
             int key = waitKey(pause ? 0 : 1);

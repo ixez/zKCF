@@ -24,57 +24,21 @@ namespace zkcf {
         return res;
     }
 
-    void KCF::ExtractFeatures(const Mat &frm, const Rect &roi, Mat& feat, FeatureSize &featSz) const {
+    void KCF::ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz) const {
         Rect paddedRoi;
 
         float cx = roi.x + roi.width / 2.0f;
         float cy = roi.y + roi.height / 2.0f;
 
-        int paddedW = roi.width * Padding;
-        int paddedH = roi.height * Padding;
-        float scale;
-        Size tmplSz;
-
-        if (TmplMode==TMPL_MODE_FIXED) {
-            // Fit largest dimension to the given length
-            if (roi.width >= roi.height)  //fit to width
-                scale = paddedW / (float) TmplLen;
-            else
-                scale = paddedH / (float) TmplLen;
-
-            tmplSz.width = paddedW / scale;
-            tmplSz.height = paddedH / scale;
-        }
-        else if(TmplMode==TMPL_MODE_ROI_SZ) {  //No template size given, use ROI size
-            tmplSz.width = paddedW;
-            tmplSz.height = paddedH;
-            scale = 1;
-        }
-        else {
-            std::cout<<"Unknown template mode."<<std::endl;
-        }
-
-        tmplSz.width=(tmplSz.width/2)*2;
-        tmplSz.height=(tmplSz.height/2)*2;
-
-        if(FeatType==FEAT_HOG || FeatType==FEAT_HOG_LAB) {
-            // Round to cell size and also make it even
-            tmplSz.width+=Feat->CellSize*2;
-            tmplSz.height+=Feat->CellSize*2;
-        }
-        else {
-            //Make number of pixels even (helps with some logic involving half-dimensions)
-        }
-
-        paddedRoi.width = tmplSz.width * scale;
-        paddedRoi.height = tmplSz.height * scale;
+        paddedRoi.width = TmplSz.width * TmplRatio;
+        paddedRoi.height = TmplSz.height * TmplRatio;
 
         // center roi with new size
         paddedRoi.x = cx - paddedRoi.width / 2;
         paddedRoi.y = cy - paddedRoi.height / 2;
 
         Mat z = RectTools::subwindow(frm, paddedRoi, BORDER_REPLICATE);
-        if(z.size()!=tmplSz) resize(z, z, tmplSz);
+        if(z.size()!=TmplSz) resize(z, z, TmplSz);
         feat=Feat->Extract(z,featSz);
     }
 
@@ -116,6 +80,8 @@ namespace zkcf {
     }
 
     bool KCF::Init(const Mat &frm, const Rect& roi) {
+        assert(roi.width >= 0 && roi.height >= 0);
+
         Lambda = 0.0001;
         Padding = 2.5;
         OutputSigmaFactor = 0.125;
@@ -132,8 +98,12 @@ namespace zkcf {
                 break;
         }
         FkFactory(FeatType,KrnlType,Feat,Krnl);
+
+        Roi = roi;
+
+
         if(EnableScale) {
-            TmplMode=TMPL_MODE_FIXED;       // Template size must be fixed when scaling
+            TmplMode=TMPL_MODE_CUSTOM;       // Template size must be fixed when scaling
 //            ScaleStep = 1.05;
 //            ScaleWeight = 0.95;
         }
@@ -141,9 +111,7 @@ namespace zkcf {
 //            ScaleStep = 1;
 //            ScaleWeight = 1;
         }
-
-        assert(roi.width >= 0 && roi.height >= 0);
-        Roi = roi;
+        TmplInit();
 
         Mat x;
         ExtractFeatures(frm, Roi, x, FeatSz);
@@ -163,7 +131,7 @@ namespace zkcf {
     }
 
     Rect KCF::Track(const Mat &frm, bool updateModel, bool updateRoi) {
-        Rect roi = Roi;
+        Rect_<float> roi = Roi;
         // Keep the roi with at least 1 pixel width and height
         // TODO: roi validate function
         if (roi.x + roi.width <= 0) roi.x = -roi.width + 1;
@@ -185,8 +153,8 @@ namespace zkcf {
             // TODO: To handle scaling problem
         }
 
-        cx += (res.x * Feat->CellSize);
-        cy += (res.y * Feat->CellSize);
+        cx += (res.x * Feat->CellSize * TmplRatio);
+        cy += (res.y * Feat->CellSize * TmplRatio);
         roi.x = cx - roi.width / 2.0f;
         roi.y = cy - roi.height / 2.0f;
 
@@ -205,7 +173,9 @@ namespace zkcf {
         if(updateModel) {
             Mat x;
             ExtractFeatures(frm, roi, x, FeatSz);
-            ModelUpdate(x);
+            Mat hann = CalcHann(FeatSz);
+            x = hann.mul(x);
+            ModelUpdate(x, LearningRate);
         }
 
         return roi;
@@ -231,8 +201,6 @@ namespace zkcf {
 
         pl.x -= (res.cols) / 2;
         pl.y -= (res.rows) / 2;
-
-        std::cout<<pl<<std::endl;
 
         return pl;
     }
@@ -268,6 +236,42 @@ namespace zkcf {
 
     void KCF::ModelUpdate(const Mat &x) {
         ModelUpdate(x,LearningRate);
+    }
+
+    void KCF::TmplInit() {
+        int paddedW = Roi.width * Padding;
+        int paddedH = Roi.height * Padding;
+
+        if (TmplMode==TMPL_MODE_CUSTOM) {
+            // Fit largest dimension to the given length
+            if (Roi.width >= Roi.height)  //fit to width
+                TmplRatio = paddedW / (float) TmplLen;
+            else
+                TmplRatio = paddedH / (float) TmplLen;
+
+            TmplSz.width = paddedW / TmplRatio;
+            TmplSz.height = paddedH / TmplRatio;
+        }
+        else if(TmplMode==TMPL_MODE_ROI_SZ) {  //No template size given, use ROI size
+            TmplSz.width = paddedW;
+            TmplSz.height = paddedH;
+            TmplRatio = 1;
+        }
+        else {
+            std::cout<<"Unknown template mode."<<std::endl;
+        }
+
+        TmplSz.width=(TmplSz.width/2)*2;
+        TmplSz.height=(TmplSz.height/2)*2;
+
+        if(FeatType==FEAT_HOG || FeatType==FEAT_HOG_LAB) {
+            // Round to cell size and also make it even
+            TmplSz.width+=Feat->CellSize*2;
+            TmplSz.height+=Feat->CellSize*2;
+        }
+        else {
+            //Make number of pixels even (helps with some logic involving half-dimensions)
+        }
     }
 
 }
