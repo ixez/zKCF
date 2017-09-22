@@ -234,10 +234,6 @@ namespace zkcf {
         }
     }
 
-    void KCF::ModelUpdate(const Mat &x) {
-        ModelUpdate(x,LearningRate);
-    }
-
     void KCF::TmplInit() {
         int paddedW = Roi.width * Padding;
         int paddedH = Roi.height * Padding;
