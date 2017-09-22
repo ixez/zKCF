@@ -59,7 +59,6 @@ namespace zkcf {
         void TmplInit();   //  Part of Init()
 
         void ModelInit(const Mat &x);
-        void ModelUpdate(const Mat &x);
         void ModelUpdate(const Mat &x, float lr);
 
         // Extract feature maps of roi which is padded and resized to specified template size.

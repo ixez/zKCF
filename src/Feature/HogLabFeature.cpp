@@ -4,6 +4,7 @@ namespace zkcf {
 
     HogLabFeature::HogLabFeature()
     {
+        CellSize=4;
         Clusters = {
             {161.317504, 127.223401, 128.609333},
             {142.922425, 128.666965, 127.532319},

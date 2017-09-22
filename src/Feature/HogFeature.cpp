@@ -4,6 +4,8 @@
 
 namespace zkcf {
     using namespace cv;
+    HogFeature::HogFeature() { CellSize=4; }
+
     Mat HogFeature::Extract(const Mat& patch, FeatureSize& sz) const {
         using namespace fhog;
         IplImage z_ipl = patch;
@@ -20,4 +22,5 @@ namespace zkcf {
         freeFeatureMapObject(&map);
         return feat;
     }
+
 }
