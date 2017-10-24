@@ -76,6 +76,15 @@ inline void resize(cv::Rect_<t> &rect, float scalex, float scaley = 0)
 }
 
 template <typename t>
+inline cv::Rect_<t> resize(cv::Rect_<t> rect, cv::Size_<t> sz) {
+    rect.x -= (rect.width - sz.width) / 2.f;
+    rect.width += sz.width;
+
+    rect.y -= (rect.height - sz.height) / 2.f;
+    rect.height += sz.height;
+}
+
+template <typename t>
 inline void limit(cv::Rect_<t> &rect, cv::Rect_<t> limit)
 {
     if (rect.x + rect.width > limit.x + limit.width)rect.width = (limit.x + limit.width - rect.x);

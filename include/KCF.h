@@ -10,17 +10,25 @@ namespace zkcf {
     using namespace cv;
     class KCF : ztrack::ITracker {
     public:
-        bool EnableScale = true;
-
+        //// Constants
         typedef enum {
             TMPL_MODE_CUSTOM = 1,     // Longer edge will resize to this length and exctract features
             TMPL_MODE_ROI_SZ = 0     // Not resize, keep size
         } eTemplateMode;
-        eTemplateMode TmplMode;
-        int TmplLen = 96;          // Available when TEMPLATE_MODE_FIXED
 
-        KCF(FeatureType ft = FEAT_HOG, KernelType kt = KRNL_GAUSSIAN);
-        bool Init(const Mat &frm, const Rect& roi);
+        //// Configuration
+        // Template
+        eTemplateMode TmplMode = TMPL_MODE_CUSTOM;
+        int TmplLen = 96;          // Used when TEMPLATE_MODE_FIXED
+        // Scale
+        bool EnableScale = true;
+        int ScaleN = 0;
+        float ScaleStep = 0.05;
+        float ScaleWeight = 0.95;
+
+        //// Methods
+        explicit KCF(FeatureType ft = FEAT_HOG, KernelType kt = KRNL_GAUSSIAN);
+        bool Init(const Mat &frm, const Rect& roi) override;
         Rect Track(const Mat &frm) override;
         Rect Track(const Mat &frm, bool updateModel, bool updateRoi);
 
@@ -29,16 +37,18 @@ namespace zkcf {
         Point2f Detect(const Mat &x, const Mat &z, float &pv) const;
 
     private:
+        // padded_sz / TemplLen
+        float TmplRatio;
+        // Padded roi will be resize to this template size and then be extracted feature
+        Size TmplSz;
+
+        vector<float> ScaleList;
+        float ScaleRatio;
 
         float LearningRate;
         float Lambda;
         float Padding;
         float OutputSigmaFactor;
-
-        // padded_sz / TemplLen
-        float TmplRatio;
-        // Padded roi will be resize to this template size and then be extracted feature
-        Size TmplSz;
 
         Rect_<float> Roi;
 
@@ -66,5 +76,7 @@ namespace zkcf {
 
         // Eval response map, x => tmpl, z => test image patch
         Mat EvalResMap(const Mat &x, const Mat &z) const;
+
+        void ScaleInit();
     };
 }
