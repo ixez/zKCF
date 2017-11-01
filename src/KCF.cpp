@@ -167,10 +167,9 @@ namespace zkcf {
                 rectangle(_frm,_roi,CV_RGB(255,255,255),1);
             }
         }
-        ScaleRatio *= scale;
 
-        cx += (res.x * Feat->CellSize * TmplRatio * ScaleRatio);
-        cy += (res.y * Feat->CellSize * TmplRatio * ScaleRatio);
+        cx += (res.x * Feat->CellSize * TmplRatio * ScaleRatio * scale);
+        cy += (res.y * Feat->CellSize * TmplRatio * ScaleRatio * scale);
         roi.x = cx - roi.width / 2.0f;
         roi.y = cy - roi.height / 2.0f;
         roi.width *= scale;
@@ -185,6 +184,7 @@ namespace zkcf {
 
         if (updateRoi) {
             Roi = roi;
+            ScaleRatio *= scale;
         }
 
         if (updateModel) {

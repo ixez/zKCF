@@ -9,7 +9,7 @@ namespace zkcf {
         Mat feat;
         cvtColor(patch, feat, CV_BGR2GRAY);
         feat.convertTo(feat, CV_32F, 1 / 255.f);
-        feat -= 0.5f;       // TODO: Why?
+        feat -= 0.5f;       // Unknown: Why?
         sz.rows = feat.rows;
         sz.cols = feat.cols;
         sz.cns = 1;
