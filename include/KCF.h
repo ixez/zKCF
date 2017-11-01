@@ -22,7 +22,7 @@ namespace zkcf {
         int TmplLen = 96;          // Used when TEMPLATE_MODE_FIXED
         // Scale
         bool EnableScale = true;
-        int ScaleN = 0;
+        int ScaleN = 1;
         float ScaleStep = 0.05;
         float ScaleWeight = 0.95;
 
@@ -58,6 +58,7 @@ namespace zkcf {
         IKernel* Krnl = nullptr;
 
         FeatureSize FeatSz;
+        Mat Hann;
         Mat ModelY_f;
         Mat ModelAlpha_f;
         Mat ModelX;

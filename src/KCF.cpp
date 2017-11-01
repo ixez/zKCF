@@ -1,4 +1,5 @@
 #include <FkFactory.h>
+#include <Def.h>
 #include "KCF.h"
 #include "FFTTools.hpp"
 #include "recttools.hpp"
@@ -31,8 +32,11 @@ namespace zkcf {
         float cx = roi.x + roi.width / 2.0f;
         float cy = roi.y + roi.height / 2.0f;
 
-        paddedRoi.width = TmplSz.width * TmplRatio;
-        paddedRoi.height = TmplSz.height * TmplRatio;
+        // Different from origin
+        // paddedRoi.width = TmplSz.width * TmplRatio;
+        // paddedRoi.height = TmplSz.height * TmplRatio;
+        paddedRoi.width = roi.width * Padding;
+        paddedRoi.height = roi.height * Padding;
 
         // center roi with new size
         paddedRoi.x = cx - paddedRoi.width / 2;
@@ -111,8 +115,8 @@ namespace zkcf {
 
         Mat x;
         ExtractFeatures(frm, Roi, x, FeatSz);
-        Mat hann = CalcHann(FeatSz);
-        x = hann.mul(x);
+        Hann = CalcHann(FeatSz);
+        x = Hann.mul(x);
 
         float outputSigma = std::sqrt((float) FeatSz.rows * FeatSz.cols) / Padding * OutputSigmaFactor;
         Mat y = CalcGaussianMap(FeatSz, outputSigma);
@@ -138,28 +142,29 @@ namespace zkcf {
         float cx = roi.x + roi.width / 2.0f;
         float cy = roi.y + roi.height / 2.0f;
 
+        Mat _frm=frm.clone();
         Point2f res;
         float pv = -numeric_limits<float>::max();
         float scale = 1.f;
         if (EnableScale) {
             for (float _scale:ScaleList) {
-                // TODO: To handle scaling problem
                 Mat z;
                 float _pv;
                 Rect_<float> _roi = roi;
-                RectTools::resize(_roi,_scale);
-                cout<<_roi<<" ";
+                RectTools::resize(_roi, _scale);
                 ExtractFeatures(frm, _roi, z, FeatSz);
-                // TODO: Remove unnecessary calculation of hann
-                Mat hann = CalcHann(FeatSz);
-                z = hann.mul(z);
+                assert(Hann.size()==z.size());
+                z = Hann.mul(z);
                 Point2f _res = Detect(ModelX, z, _pv);
-                cout<<_pv<<endl;
-                if(_pv>pv) {
+
+                if(_scale == 1.0f) _pv *= ScaleWeight;
+                if(_pv > pv) {
                     scale = _scale;
                     pv = _pv;
                     res = _res;
                 }
+
+                rectangle(_frm,_roi,CV_RGB(255,255,255),1);
             }
         }
         ScaleRatio *= scale;
@@ -168,7 +173,8 @@ namespace zkcf {
         cy += (res.y * Feat->CellSize * TmplRatio * ScaleRatio);
         roi.x = cx - roi.width / 2.0f;
         roi.y = cy - roi.height / 2.0f;
-
+        roi.width *= scale;
+        roi.height *= scale;
 
         // TODO: roi validate function
         if (roi.x >= frm.cols - 1) roi.x = frm.cols - 1;
@@ -278,15 +284,9 @@ namespace zkcf {
     }
 
     void KCF::ScaleInit() {
-        vector<float> l1, l2;
-        for (int i = 1; i < ScaleN; i++) {
-            l1.push_back(1 - ScaleStep * i);
-            l2.push_back(1 + ScaleStep * i);
+        for (int i = -ScaleN; i <= ScaleN; i++) {
+            ScaleList.push_back(1 + ScaleStep * i);
         }
-        reverse(l1.begin(), l1.end());
-        ScaleList.insert(ScaleList.end(), l1.begin(), l1.end());
-        ScaleList.push_back(1);
-        ScaleList.insert(ScaleList.end(), l2.begin(), l2.end());
     }
 
 }
