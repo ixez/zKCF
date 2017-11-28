@@ -19,9 +19,9 @@ namespace zkcf {
         //// Configuration
         // Template
         eTemplateMode TmplMode = TMPL_MODE_CUSTOM;
-        int TmplLen = 96;          // Used when TEMPLATE_MODE_FIXED
+        int TmplLen = 96;          // Used when TMPL_MODE_CUSTOM
         // Scale
-        bool EnableScale = true;
+        bool EnableScale = false;
         int ScaleN = 1;
         float ScaleStep = 0.05;
         float ScaleWeight = 0.95;
