@@ -108,9 +108,8 @@ namespace zkcf {
         Roi = roi;
 
 
-        if (EnableScale) {
-            ScaleInit();
-        }
+
+        ScaleInit();
         TmplInit();
 
         Mat x;
@@ -146,26 +145,24 @@ namespace zkcf {
         Point2f res;
         float pv = -numeric_limits<float>::max();
         float scale = 1.f;
-        if (EnableScale) {
-            for (float _scale:ScaleList) {
-                Mat z;
-                float _pv;
-                Rect_<float> _roi = roi;
-                RectTools::resize(_roi, _scale);
-                ExtractFeatures(frm, _roi, z, FeatSz);
-                assert(Hann.size()==z.size());
-                z = Hann.mul(z);
-                Point2f _res = Detect(ModelX, z, _pv);
+        for (float _scale:ScaleList) {
+            Mat z;
+            float _pv;
+            Rect_<float> _roi = roi;
+            RectTools::resize(_roi, _scale);
+            ExtractFeatures(frm, _roi, z, FeatSz);
+            assert(Hann.size()==z.size());
+            z = Hann.mul(z);
+            Point2f _res = Detect(ModelX, z, _pv);
 
-                if(_scale == 1.0f) _pv *= ScaleWeight;
-                if(_pv > pv) {
-                    scale = _scale;
-                    pv = _pv;
-                    res = _res;
-                }
-
-                rectangle(_frm,_roi,CV_RGB(255,255,255),1);
+            if(_scale == 1.0f) _pv *= ScaleWeight;
+            if(_pv > pv) {
+                scale = _scale;
+                pv = _pv;
+                res = _res;
             }
+
+            rectangle(_frm,_roi,CV_RGB(255,255,255),1);
         }
 
         cx += (res.x * Feat->CellSize * TmplRatio * ScaleRatio * scale);
@@ -284,6 +281,7 @@ namespace zkcf {
     }
 
     void KCF::ScaleInit() {
+        ScaleN=EnableScale?ScaleN:0;
         for (int i = -ScaleN; i <= ScaleN; i++) {
             ScaleList.push_back(1 + ScaleStep * i);
         }
