@@ -155,7 +155,7 @@ namespace zkcf {
             z = Hann.mul(z);
             Point2f _res = Detect(ModelX, z, _pv);
 
-            if(_scale == 1.0f) _pv *= ScaleWeight;
+            if(_scale != 1.0f) _pv *= ScaleWeight;
             if(_pv > pv) {
                 scale = _scale;
                 pv = _pv;
