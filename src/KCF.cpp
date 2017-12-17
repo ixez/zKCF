@@ -89,7 +89,7 @@ namespace zkcf {
 
         ScaleRatio = 1;
         Lambda = 0.0001;
-        Padding = 2.5;
+        Padding = 3;
         OutputSigmaFactor = 0.125;
         switch (FeatType) {
             case FEAT_HOG:
