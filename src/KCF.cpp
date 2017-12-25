@@ -89,7 +89,7 @@ namespace zkcf {
 
         ScaleRatio = 1;
         Lambda = 0.0001;
-        Padding = 3;
+        Padding = 2.5;
         OutputSigmaFactor = 0.125;
         switch (FeatType) {
             case FEAT_HOG:
@@ -167,6 +167,7 @@ namespace zkcf {
 
         cx += (res.x * Feat->CellSize * TmplRatio * ScaleRatio * scale);
         cy += (res.y * Feat->CellSize * TmplRatio * ScaleRatio * scale);
+
         roi.x = cx - roi.width / 2.0f;
         roi.y = cy - roi.height / 2.0f;
         roi.width *= scale;
@@ -268,13 +269,14 @@ namespace zkcf {
             std::cout << "Unknown template mode." << std::endl;
         }
 
-        TmplSz.width = (TmplSz.width / 2) * 2;
-        TmplSz.height = (TmplSz.height / 2) * 2;
+        // Round to cell size and also make it even (Hog is sensitive on this)
+        TmplSz.width = TmplSz.width / (2 * Feat->CellSize) * (2 * Feat->CellSize);
+        TmplSz.height = TmplSz.height / (2 * Feat->CellSize) * (2 * Feat->CellSize);
 
         if (FeatType == FEAT_HOG || FeatType == FEAT_HOG_LAB) {
-            // Round to cell size and also make it even
-            TmplSz.width += Feat->CellSize * 2;
-            TmplSz.height += Feat->CellSize * 2;
+            // Different from original
+            // TmplSz.width += Feat->CellSize * 2;
+            // TmplSz.height += Feat->CellSize * 2;
         } else {
             //Make number of pixels even (helps with some logic involving half-dimensions)
         }

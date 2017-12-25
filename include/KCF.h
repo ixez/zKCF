@@ -12,8 +12,8 @@ namespace zkcf {
     public:
         //// Constants
         typedef enum {
-            TMPL_MODE_CUSTOM = 1,     // Longer edge will resize to this length and exctract features
-            TMPL_MODE_ROI_SZ = 0     // Not resize, keep size
+            TMPL_MODE_CUSTOM = 1,    // Longer edge will resize to this length and exctract features
+            TMPL_MODE_ROI_SZ = 0     // Not to resize, keep size
         } eTemplateMode;
 
         //// Configuration
