@@ -3,7 +3,7 @@
 #include <opencv2/opencv.hpp>
 namespace ztrack {
 	using namespace std;
-	class TrackTask {
+	class TaskConfig {
 	public:
 		void SetArgs(string name, string basePath, int startFrame, int endFrame, string seqZeroNum, string seqFormat,
 					 cv::Rect bbox, bool enableMonitor);

@@ -5,7 +5,7 @@ find_package(OpenCV REQUIRED)
 
 set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(src
-        ${src_dir}/TrackTask.cpp
+        ${src_dir}/TaskConfig.cpp
 
         ${src_dir}/fhog.cpp
         ${src_dir}/FFTTools.cpp
@@ -22,7 +22,7 @@ set(src
 
 set(include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(include
-        ${include_dir}/TrackTask.h
+        ${include_dir}/TaskConfig.h
 
         ${include_dir}/ITracker.h
         ${include_dir}/KCF.h

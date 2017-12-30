@@ -1,7 +1,7 @@
 #include <fstream>
-#include "TrackTask.h"
+#include "TaskConfig.h"
 namespace ztrack {
-	void TrackTask::SetArgs(string name, string basePath, int startFrame, int endFrame, string seqZeroNum, string seqFormat,
+	void TaskConfig::SetArgs(string name, string basePath, int startFrame, int endFrame, string seqZeroNum, string seqFormat,
 					   cv::Rect bbox, bool enableMonitor) {
 
 		SeqName = name;
@@ -14,7 +14,7 @@ namespace ztrack {
 		EnableMonitor = enableMonitor;
 	}
 
-	void TrackTask::SetArgs(int argc, char *argv[]) {
+	void TaskConfig::SetArgs(int argc, char *argv[]) {
 		if (argc >= 11) {
 			SetArgs(
 					argv[1],
@@ -29,7 +29,7 @@ namespace ztrack {
 		}
 	}
 
-	cv::Mat &TrackTask::GetFrm(int frmId, int flag) {
+	cv::Mat &TaskConfig::GetFrm(int frmId, int flag) {
 		if (CurrentFrmId != frmId) {
 			CurrentFrmId = frmId;
 			CurrentFrm = cv::imread(GetFrmPath(frmId), flag);
@@ -37,14 +37,14 @@ namespace ztrack {
 		return CurrentFrm;
 	}
 
-	string TrackTask::GetFrmPath(int frmId) const {
+	string TaskConfig::GetFrmPath(int frmId) const {
 		string SeqFullPath = SeqPathPre + PathSub + "%0" + ZeroNum + "d." + Format;
 		char imgPath[1024];
 		sprintf(imgPath, SeqFullPath.c_str(), frmId);
 		return imgPath;
 	}
 
-	void TrackTask::PushResult(cv::Rect result) {
+	void TaskConfig::PushResult(cv::Rect result) {
 		Results.push_back(result);
 		if (EnableMonitor) {
 			cv::Mat renderedFrm = CurrentFrm.clone();
@@ -57,7 +57,7 @@ namespace ztrack {
 		}
 	}
 
-	void TrackTask::SaveResults() {
+	void TaskConfig::SaveResults() {
 		//Saving Result
 		ofstream outFile;
 		outFile.open(GetResultOutputPath(), ios::out);

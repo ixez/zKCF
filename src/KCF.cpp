@@ -1,11 +1,21 @@
 #include <FkFactory.h>
-#include <Def.h>
 #include "KCF.h"
 #include "FFTTools.hpp"
 #include "recttools.hpp"
 
 namespace zkcf {
     using namespace cv;
+
+    KCF::KCF(){
+        FeatType = FEAT_HOG;
+        KrnlType = KRNL_GAUSSIAN;
+        ScaleRatio = 1;
+    }
+
+    KCF::KCF(FeatureType ft, KernelType kt) : KCF() {
+        FeatType = ft;
+        KrnlType = kt;
+    }
 
     Mat KCF::CalcGaussianMap(const FeatureSize &sz, float sigma) {
         Mat_<float> res(sz.rows, sz.cols);
@@ -33,8 +43,6 @@ namespace zkcf {
         float cy = roi.y + roi.height / 2.0f;
 
         // Different from origin
-        // paddedRoi.width = TmplSz.width * TmplRatio;
-        // paddedRoi.height = TmplSz.height * TmplRatio;
         paddedRoi.width = roi.width * Padding;
         paddedRoi.height = roi.height * Padding;
 
@@ -47,8 +55,8 @@ namespace zkcf {
         feat = Feat->Extract(z, featSz);
     }
 
-    // Initialize Hanning window. Function called only in the first frame.
     Mat KCF::CalcHann(const FeatureSize &sz) {
+        // Initialize Hanning window. Function called only in the first frame.
         Mat hann1t = Mat(Size(sz.cols, 1), CV_32F, Scalar(0));
         Mat hann2t = Mat(Size(1, sz.rows), CV_32F, Scalar(0));
 
@@ -69,8 +77,8 @@ namespace zkcf {
         return hann;
     }
 
-    // Calculate sub-pixel peak for one dimension
     float KCF::CalcSubPixelPeak(float left, float center, float right) {
+        // Calculate sub-pixel peak for one dimension
         float divisor = 2 * center - right - left;
 
         if (divisor == 0)
@@ -79,37 +87,14 @@ namespace zkcf {
         return 0.5 * (right - left) / divisor;
     }
 
-    KCF::KCF(FeatureType ft, KernelType kt) {
-        FeatType = ft;
-        KrnlType = kt;
-    }
-
     bool KCF::Init(const Mat &frm, const Rect &roi) {
         assert(roi.width >= 0 && roi.height >= 0);
-
-        ScaleRatio = 1;
-        Lambda = 0.0001;
-        Padding = 2.5;
-        OutputSigmaFactor = 0.125;
-        switch (FeatType) {
-            case FEAT_HOG:
-                LearningRate = 0.012;
-                break;
-            case FEAT_HOG_LAB:
-                LearningRate = 0.005;
-                OutputSigmaFactor = 0.1;
-                break;
-            case FEAT_RAW:
-                LearningRate = 0.075;
-                break;
-        }
+        ParamsInit();
         FkFactory(FeatType, KrnlType, Feat, Krnl);
 
         Roi = roi;
 
-
-
-        ScaleInit();
+        ScalesInit();
         TmplInit();
 
         Mat x;
@@ -141,7 +126,7 @@ namespace zkcf {
         float cx = roi.x + roi.width / 2.0f;
         float cy = roi.y + roi.height / 2.0f;
 
-        Mat _frm=frm.clone();
+        Mat _frm = frm.clone();
         Point2f res;
         float pv = -numeric_limits<float>::max();
         float scale = 1.f;
@@ -151,18 +136,18 @@ namespace zkcf {
             Rect_<float> _roi = roi;
             RectTools::resize(_roi, _scale);
             ExtractFeatures(frm, _roi, z, FeatSz);
-            assert(Hann.size()==z.size());
+            assert(Hann.size() == z.size());
             z = Hann.mul(z);
             Point2f _res = Detect(ModelX, z, _pv);
 
-            if(_scale != 1.0f) _pv *= ScaleWeight;
-            if(_pv > pv) {
+            if (_scale != 1.0f) _pv *= ScaleWeight;
+            if (_pv > pv) {
                 scale = _scale;
                 pv = _pv;
                 res = _res;
             }
 
-            rectangle(_frm,_roi,CV_RGB(255,255,255),1);
+            rectangle(_frm, _roi, CV_RGB(255, 255, 255), 1);
         }
 
         cx += (res.x * Feat->CellSize * TmplRatio * ScaleRatio * scale);
@@ -197,6 +182,8 @@ namespace zkcf {
     }
 
     Point2f KCF::Detect(const Mat &x, const Mat &z, float &pv) const {
+        // Predict location of the target,
+        // since some features are much smaller than original img size, return subpixel location makes sense.
         using namespace FFTTools;
 
         Mat res = EvalResMap(x, z);
@@ -248,6 +235,32 @@ namespace zkcf {
         }
     }
 
+    void KCF::ParamsInit() {
+        TmplLen = 128;
+
+        // Scales
+        EnableScale = true;
+        ScaleN = 1;
+        ScaleStep = 0.05;
+        ScaleWeight = 0.95;
+
+        Lambda = 0.0001;
+        Padding = 2.5;
+        OutputSigmaFactor = 0.125;
+        switch (FeatType) {
+            case FEAT_HOG:
+                LearningRate = 0.012;
+                break;
+            case FEAT_HOG_LAB:
+                LearningRate = 0.005;
+                OutputSigmaFactor = 0.1;
+                break;
+            case FEAT_RAW:
+                LearningRate = 0.075;
+                break;
+        }
+    }
+
     void KCF::TmplInit() {
         int paddedW = Roi.width * Padding;
         int paddedH = Roi.height * Padding;
@@ -274,19 +287,17 @@ namespace zkcf {
         TmplSz.height = TmplSz.height / (2 * Feat->CellSize) * (2 * Feat->CellSize);
 
         if (FeatType == FEAT_HOG || FeatType == FEAT_HOG_LAB) {
-            // Different from original
-            // TmplSz.width += Feat->CellSize * 2;
-            // TmplSz.height += Feat->CellSize * 2;
+            TmplSz.width += Feat->CellSize * 2;
+            TmplSz.height += Feat->CellSize * 2;
         } else {
             //Make number of pixels even (helps with some logic involving half-dimensions)
         }
     }
 
-    void KCF::ScaleInit() {
-        ScaleN=EnableScale?ScaleN:0;
+    void KCF::ScalesInit() {
+        ScaleN = EnableScale ? ScaleN : 0;
         for (int i = -ScaleN; i <= ScaleN; i++) {
             ScaleList.push_back(1 + ScaleStep * i);
         }
     }
-
 }
