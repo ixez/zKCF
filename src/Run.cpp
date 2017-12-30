@@ -1,13 +1,12 @@
 #include "KCF.h"
-#include "TrackTask.h"
-#include <opencv2/opencv.hpp>
+#include "TaskConfig.h"
 
 int main(int argc, char* argv[])
 {
     using namespace cv;
     using namespace zkcf;
     using namespace std;
-    ztrack::TrackTask conf;
+    ztrack::TaskConfig conf;
     conf.SetArgs(argc, argv);
 
     Mat frm;
