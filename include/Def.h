@@ -1,3 +1,8 @@
+/*
+Author: iXez
+Website: https://ixez.github.io
+Email: sachika.misawa@outlook.com
+*/
 #pragma once
 namespace zkcf {
     typedef struct {

@@ -1,3 +1,8 @@
+/*
+Author: iXez
+Website: https://ixez.github.io
+Email: sachika.misawa@outlook.com
+*/
 #pragma once
 #include <string>
 #include <opencv2/opencv.hpp>

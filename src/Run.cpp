@@ -1,3 +1,9 @@
+/*
+Author: iXez
+Website: https://ixez.github.io
+Email: sachika.misawa@outlook.com
+*/
+
 #include "KCF.h"
 #include "TaskConfig.h"
 
