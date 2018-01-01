@@ -163,7 +163,9 @@ namespace FFTTools {
 
     void rearrange(cv::Mat &img)
     {
-        // img = img(cv::Rect(0, 0, img.cols & -2, img.rows & -2));
+        // OpenCV doesn't rearrange the quadrants to put origin [0,0] into center of image.
+        // You have to rearrange the quadrants manually.
+        // https://docs.opencv.org/2.4/doc/tutorials/core/discrete_fourier_transform/discrete_fourier_transform.html
         int cx = img.cols / 2;
         int cy = img.rows / 2;
 
