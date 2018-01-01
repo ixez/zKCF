@@ -1,8 +1,13 @@
+/*
+Author: iXez
+Website: https://ixez.github.io
+Email: sachika.misawa@outlook.com
+*/
 #pragma once
 
 #include "Def.h"
-#include "Kernel/IKernel.h"
-#include "Feature/IFeature.h"
+#include "Kernels/IKernel.h"
+#include "Features/IFeature.h"
 #include "ITracker.h"
 #include <opencv2/opencv.hpp>
 
@@ -62,14 +67,14 @@ namespace zkcf {
         Mat ModelX;
 
         //// Parts of Init()
-        void TmplInit();    // Template init
-        void ScalesInit();  // Scales init
         void ParamsInit();  // Parameters init, all configurable params are inited in this method
+        void ScalesInit();  // Scales init
+        void TmplInit();    // Template init
 
         //// Static methods
-        static Mat CalcHann(const FeatureSize &sz);
+        static Mat CalcHann(const FeatureSize &sz);     // Initialize Hanning window. Function called only in the first frame.
         static Mat CalcGaussianMap(const FeatureSize &sz,
-                                   float sigma);         // Generate Gaussian Peak. Function called only in the first frame.
+                                   float sigma);        // Generate Gaussian Peak. Function called only in the first frame.
         static float CalcSubPixelPeak(float left, float center, float right);   // Calculate sub-pixel peak for one dimension
 
         // Extract feature maps of roi which is padded and resized to specified template size.
@@ -78,7 +83,7 @@ namespace zkcf {
         // Eval response map, x => tmpl, z => test image patch
         Mat EvalResMap(const Mat &x, const Mat &z) const;
 
-        // Detect x in z, returning peak value and peak location
+        // Predict location of the target,
         Point2f Detect(const Mat &x, const Mat &z, float &pv) const;
 
         // Model methods

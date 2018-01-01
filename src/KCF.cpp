@@ -1,4 +1,9 @@
-#include <FkFactory.h>
+/*
+Author: iXez
+Website: https://ixez.github.io
+Email: sachika.misawa@outlook.com
+*/
+#include "FkFactory.h"
 #include "KCF.h"
 #include "FFTTools.hpp"
 #include "recttools.hpp"
@@ -56,7 +61,6 @@ namespace zkcf {
     }
 
     Mat KCF::CalcHann(const FeatureSize &sz) {
-        // Initialize Hanning window. Function called only in the first frame.
         Mat hann1t = Mat(Size(sz.cols, 1), CV_32F, Scalar(0));
         Mat hann2t = Mat(Size(1, sz.rows), CV_32F, Scalar(0));
 
@@ -78,7 +82,6 @@ namespace zkcf {
     }
 
     float KCF::CalcSubPixelPeak(float left, float center, float right) {
-        // Calculate sub-pixel peak for one dimension
         float divisor = 2 * center - right - left;
 
         if (divisor == 0)
@@ -182,7 +185,6 @@ namespace zkcf {
     }
 
     Point2f KCF::Detect(const Mat &x, const Mat &z, float &pv) const {
-        // Predict location of the target,
         // since some features are much smaller than original img size, return subpixel location makes sense.
         using namespace FFTTools;
 
@@ -236,7 +238,7 @@ namespace zkcf {
     }
 
     void KCF::ParamsInit() {
-        TmplLen = 96;
+        TmplLen = 128;
 
         // Scales
         EnableScale = true;
@@ -245,7 +247,7 @@ namespace zkcf {
         ScaleWeight = 0.95;
 
         Lambda = 0.0001;
-        Padding = 3;
+        Padding = 2.5;
         OutputSigmaFactor = 0.125;
         switch (FeatType) {
             case FEAT_HOG:

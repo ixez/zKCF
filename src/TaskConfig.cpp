@@ -1,3 +1,8 @@
+/*
+Author: iXez
+Website: https://ixez.github.io
+Email: sachika.misawa@outlook.com
+*/
 #include <fstream>
 #include "TaskConfig.h"
 namespace ztrack {
