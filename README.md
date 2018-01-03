@@ -39,7 +39,7 @@ A `Basketball` sequence is prepared in  `assets/seqs` for demo. The demo is call
 ## How to extend zKCF
 To add a new feature or kernel,
 1. Put implementation codes in corresponding directories `src(include)/Features` and `src(include)/Kernels`.   
-2. Define a new `FeatureType`/`KernelType` in `include/Def.h`.   
+2. Define a new `FeatureType` or `KernelType` in `include/Def.h`.   
 3. Customize parameters initialization in `src/FkFactory.cpp`.   
 
 Since features and kernels are based on interface `IFeature.h` and `IKernel.h`, implementation details are hidden in `KCF` class, which focusing on the pipeline of the tracker instead of features and kernels.   
@@ -54,6 +54,6 @@ Nevertheless, parameters can be initialized for different features and kernels i
     * Polynomial kernel
 
 ## References
-[1] Henriques, J. F., et al. "High-Speed Tracking with Kernelized Correlation Filters." IEEE Transactions on Pattern Analysis & Machine Intelligence 37.3(2015):583-596.
-[2] Rui, Caseiro, P. Martins, and J. Batista. "Exploiting the circulant structure of tracking-by-detection with kernels." European Conference on Computer Vision Springer-Verlag, 2012:702-715.
-[3] Wu, Yi, J. Lim, and M. Yang. "Online Object Tracking: A Benchmark Supplemental Material." 9.4(2013):2411-2418.
+[1] Henriques, J. F., et al. "High-Speed Tracking with Kernelized Correlation Filters." IEEE Transactions on Pattern Analysis & Machine Intelligence 37.3(2015):583-596.   
+[2] Rui, Caseiro, P. Martins, and J. Batista. "Exploiting the circulant structure of tracking-by-detection with kernels." European Conference on Computer Vision Springer-Verlag, 2012:702-715.   
+[3] Wu, Yi, J. Lim, and M. Yang. "Online Object Tracking: A Benchmark Supplemental Material." 9.4(2013):2411-2418.   
