@@ -5,9 +5,9 @@ In zKCF, the implementation of KCF's main body, feature extractors and correlati
 
 ## Evaluation and Comparison
 The performance and speed of zKCF and its base KCFcpp are evaluated and compared with the same components of HoG feature and Gaussian kernel on CVPR13[3] tracking benchmark. Two sets of parameters are tested, which are `Padding` = 2.5, `TemplateLen` = 128 and `Padding` = 2.5, `TemplateLen` = 96. Since some implementation details are refined, zKCF obtains a better performance, with a same level of speed.
-| | |
-|:---------:|:----------:|
-|![](https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/quality_plot_error_OPE_threshold.png)|![](https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/quality_plot_overlap_OPE_AUC.png)|
+
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/quality_plot_error_OPE_threshold.png" align="left" width="400" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/quality_plot_overlap_OPE_AUC.png" align="left" width="400" />
 
 |   Tracker     |   zKCF_2d5_96     |   KCF_2d5_96  |   zKCF_2d5_128    |   KCF_2d5_128     |
 |   :---------: |   :----------:    |   :---------: |   :----------:    |   :---------:     |
