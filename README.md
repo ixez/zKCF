@@ -7,15 +7,9 @@ In zKCF, the implementation of KCF's main body, feature extractors and correlati
 The performance and speed of zKCF and its base KCFcpp are evaluated and compared with the same components of HoG feature and Gaussian kernel on CVPR13[3] and OTB50/100[4] tracking benchmark. Two sets of parameters are tested, which are `TemplateLen` = 128 and `TemplateLen` = 96. Since some implementation details are refined, zKCF obtains a better performance, with a same level of speed.
 
 ### Performance
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_quality_plot_error_OPE_threshold.png" align="left" width="400" />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_quality_plot_overlap_OPE_AUC.png" align="right" width="400" />
-<br />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_quality_plot_error_OPE_threshold.png" align="left" width="400" />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_quality_plot_overlap_OPE_AUC.png" align="right" width="400" />
-<br />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_quality_plot_error_OPE_threshold.png" align="left" width="400" />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_quality_plot_overlap_OPE_AUC.png" align="right" width="400" />
-<br />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_plot.jpg" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_plot.jpg" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_plot.jpg" />
 
 ### Speed (FPS)
 |        	| zKCF_96 	| KCF_96 	| zKCF_128 	| KCF_128 	|
