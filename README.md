@@ -4,14 +4,25 @@ This project is mainly based on the code of [KCFcpp](https://github.com/joaofaro
 In zKCF, the implementation of KCF's main body, feature extractors and correlation kernels are seperated, implementation is refined and reorganized for code readability and extensibility. Moreover, with parameters tuning, zKCF obtain a slightly better performance and a faster speed.
 
 ## Evaluation and Comparison
-The performance and speed of zKCF and its base KCFcpp are evaluated and compared with the same components of HoG feature and Gaussian kernel on CVPR13[3] tracking benchmark. Two sets of parameters are tested, which are `Padding` = 2.5, `TemplateLen` = 128 and `Padding` = 2.5, `TemplateLen` = 96. Since some implementation details are refined, zKCF obtains a better performance, with a same level of speed.
+The performance and speed of zKCF and its base KCFcpp are evaluated and compared with the same components of HoG feature and Gaussian kernel on CVPR13[3] and OTB50/100[4] tracking benchmark. Two sets of parameters are tested, which are `TemplateLen` = 128 and `TemplateLen` = 96. Since some implementation details are refined, zKCF obtains a better performance, with a same level of speed.
 
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/quality_plot_error_OPE_threshold.png" align="left" width="400" />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/quality_plot_overlap_OPE_AUC.png" align="left" width="400" />
+### Performance
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_quality_plot_error_OPE_threshold.png" align="left" width="400" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_quality_plot_overlap_OPE_AUC.png" align="right" width="400" />
+<br />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_quality_plot_error_OPE_threshold.png" align="left" width="400" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_quality_plot_overlap_OPE_AUC.png" align="right" width="400" />
+<br />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_quality_plot_error_OPE_threshold.png" align="left" width="400" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_quality_plot_overlap_OPE_AUC.png" align="right" width="400" />
+<br />
 
-|   Tracker     |   zKCF_2d5_96     |   KCF_2d5_96  |   zKCF_2d5_128    |   KCF_2d5_128     |
-|   :---------: |   :----------:    |   :---------: |   :----------:    |   :---------:     |
-|   FPS         |   115.07          |   108.75      |   75.64           |   76.98           |
+### Speed (FPS)
+|        	| zKCF_96 	| KCF_96 	| zKCF_128 	| KCF_128 	|
+|--------	|---------	|--------	|----------	|---------	|
+| CVPR13 	| 115.07  	| 108.75 	| 75.64    	| 76.98   	|
+| OTB50  	| 139.13  	| 77.55  	| 94.12    	| 95.40   	|
+| OTB100 	| 145.80  	| 92.33  	| 97.55    	| 99.03   	|
 
 ## Demo Usage
 ### Compilation
