@@ -1,4 +1,5 @@
 // HogLabFeature is not complete yet.
+#include <Def.h>
 #include "Features/HogLabFeature.h"
 
 namespace zkcf {
@@ -24,7 +25,53 @@ namespace zkcf {
             {45.015485, 138.543124, 102.402528}
         };
         LabCentroids = cv::Mat(Clusters.size(), 3, CV_32FC1, &Clusters);
+    }
 
+    Mat HogLabFeature::Extract(const Mat &patch, FeatureSize &sz) const {
+        Mat feat=HogFeature::Extract(patch, sz);
+        cv::Mat lab;
+        cvtColor(patch, lab, CV_BGR2Lab);
+        unsigned char *input = lab.data;
 
+        // Sparse output vector
+        cv::Mat outputLab = cv::Mat(LabCentroids.rows, sz.rows*sz.cols, CV_32F, float(0));
+
+        int cntCell = 0;
+        // Iterate through each cell
+        for (int cY = CellSize; cY < patch.rows-CellSize; cY+=CellSize){
+            for (int cX = CellSize; cX < patch.cols-CellSize; cX+=CellSize){
+                // Iterate through each pixel of cell (cX,cY)
+                for(int y = cY; y < cY+CellSize; ++y){
+                    for(int x = cX; x < cX+CellSize; ++x){
+                        // Lab components for each pixel
+                        float l = input[(patch.cols * y + x) * 3];
+                        float a = input[(patch.cols * y + x) * 3 + 1];
+                        float b = input[(patch.cols * y + x) * 3 + 2];
+
+                        // Iterate trough each centroid
+                        float minDist = FLT_MAX;
+                        int minIdx = 0;
+                        float *inputCentroid = (float*)(LabCentroids.data);
+                        for(int k = 0; k < LabCentroids.rows; ++k){
+                            float dist = ( (l - inputCentroid[3*k]) * (l - inputCentroid[3*k]) )
+                                         + ( (a - inputCentroid[3*k+1]) * (a - inputCentroid[3*k+1]) )
+                                         + ( (b - inputCentroid[3*k+2]) * (b - inputCentroid[3*k+2]) );
+                            if(dist < minDist){
+                                minDist = dist;
+                                minIdx = k;
+                            }
+                        }
+                        // Store result at output
+                        outputLab.at<float>(minIdx, cntCell) += 1.0 / (CellSize * CellSize);
+                        //((float*) outputLab.data)[minIdx * (size_patch[0]*size_patch[1]) + cntCell] += 1.0 / cell_sizeQ;
+                    }
+                }
+                cntCell++;
+            }
+        }
+        // Update size_patch[2] and add features to FeaturesMap
+        sz.cns += LabCentroids.rows;
+        feat.push_back(outputLab);
+        return feat;
     }
 }
