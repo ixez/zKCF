@@ -238,7 +238,7 @@ namespace zkcf {
     }
 
     void KCF::ParamsInit() {
-        TmplLen = 128;
+        TmplLen = 96;
 
         // Scales
         EnableScale = true;

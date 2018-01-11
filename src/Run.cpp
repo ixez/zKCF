@@ -18,8 +18,8 @@ int main(int argc, char* argv[])
     Mat frm;
     Rect result;
 
-    KCF tracker;
-//    KCF tracker(FeatureType::FEAT_RAW);
+//    KCF tracker;
+    KCF tracker(FeatureType::FEAT_HOG_LAB, KernelType::KRNL_GAUSSIAN);
 
     for (int frameId = conf.StartFrmId, i = 1; frameId <= conf.EndFrmId; ++frameId, ++i)
     {

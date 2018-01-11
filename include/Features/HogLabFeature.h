@@ -13,6 +13,8 @@ namespace zkcf {
     class HogLabFeature : public HogFeature {
     public:
         HogLabFeature();
+        Mat Extract(const Mat &patch, FeatureSize &sz) const override;
+
     private:
         Mat LabCentroids;
         vector<vector<float>> Clusters;
