@@ -17,6 +17,5 @@ namespace zkcf {
 
     private:
         Mat LabCentroids;
-        vector<vector<float>> Clusters;
     };
 }
