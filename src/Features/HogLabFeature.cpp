@@ -7,7 +7,8 @@ namespace zkcf {
     HogLabFeature::HogLabFeature()
     {
         CellSize=4;
-        Clusters = {
+        int nClusters=15;
+        float clusters[nClusters][3] = {
             {161.317504, 127.223401, 128.609333},
             {142.922425, 128.666965, 127.532319},
             {67.879757, 127.721830, 135.903311},
@@ -24,14 +25,14 @@ namespace zkcf {
             {81.083293, 170.051905, 148.904079},
             {45.015485, 138.543124, 102.402528}
         };
-        LabCentroids = cv::Mat(Clusters.size(), 3, CV_32FC1, &Clusters);
+        LabCentroids = Mat(nClusters, 3, CV_32FC1, &clusters).clone();
     }
 
     Mat HogLabFeature::Extract(const Mat &patch, FeatureSize &sz) const {
         Mat feat=HogFeature::Extract(patch, sz);
         cv::Mat lab;
         cvtColor(patch, lab, CV_BGR2Lab);
-        unsigned char *input = lab.data;
+        unsigned char *input = (unsigned char*)(lab.data);
 
         // Sparse output vector
         cv::Mat outputLab = cv::Mat(LabCentroids.rows, sz.rows*sz.cols, CV_32F, float(0));
@@ -69,6 +70,20 @@ namespace zkcf {
                 cntCell++;
             }
         }
+
+        Mat labShow;
+        for(int i=0;i<LabCentroids.rows;i++) {
+            if(i==0) {
+                labShow=outputLab.row(i).reshape(1, sz.rows);
+            }
+            else {
+                hconcat(labShow, outputLab.row(i).reshape(1, sz.rows), labShow);
+            }
+        }
+        imshow("lab",labShow);
+        waitKey(0);
+
+
         // Update size_patch[2] and add features to FeaturesMap
         sz.cns += LabCentroids.rows;
         feat.push_back(outputLab);
