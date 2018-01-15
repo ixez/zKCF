@@ -71,19 +71,6 @@ namespace zkcf {
             }
         }
 
-        Mat labShow;
-        for(int i=0;i<LabCentroids.rows;i++) {
-            if(i==0) {
-                labShow=outputLab.row(i).reshape(1, sz.rows);
-            }
-            else {
-                hconcat(labShow, outputLab.row(i).reshape(1, sz.rows), labShow);
-            }
-        }
-        imshow("lab",labShow);
-        waitKey(0);
-
-
         // Update size_patch[2] and add features to FeaturesMap
         sz.cns += LabCentroids.rows;
         feat.push_back(outputLab);
