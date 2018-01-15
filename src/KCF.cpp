@@ -47,13 +47,8 @@ namespace zkcf {
         float cx = roi.x + roi.width / 2.0f;
         float cy = roi.y + roi.height / 2.0f;
 
-        // Different from origin
-//        pRoi.width = roi.width * Padding;
-//        pRoi.height = roi.height * Padding;
         pRoi.width = PaddedSz.width * ScaleRatio * scale;
         pRoi.height = PaddedSz.height * ScaleRatio * scale;
-
-        // center roi with new size
         pRoi.x = cx - pRoi.width / 2;
         pRoi.y = cy - pRoi.height / 2;
 
@@ -74,8 +69,8 @@ namespace zkcf {
         Mat hann2d = hann2t * hann1t;
 
         Mat hann1d = hann2d.reshape(1, 1);
-        Mat hann = Mat(Size(sz.rows * sz.cols, sz.cns), CV_32F, Scalar(0));
-        for (int i = 0; i < sz.cns; i++) {
+        Mat hann = Mat(Size(sz.rows * sz.cols, sz.chns), CV_32F, Scalar(0));
+        for (int i = 0; i < sz.chns; i++) {
             for (int j = 0; j < sz.rows * sz.cols; j++) {
                 hann.at<float>(i, j) = hann1d.at<float>(0, j);
             }

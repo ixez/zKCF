@@ -17,7 +17,7 @@ namespace zkcf {
         feat -= 0.5f;       // Unknown: Why?
         sz.rows = feat.rows;
         sz.cols = feat.cols;
-        sz.cns = 1;
+        sz.chns = 1;
         return feat.reshape(1, 1);
     }
 }
