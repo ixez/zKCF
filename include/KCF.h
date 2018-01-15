@@ -44,6 +44,7 @@ namespace zkcf {
     private:
         float TmplRatio;            // padded_sz / TemplLen
         Size TmplSz;                // Padded roi will be resize to this template size and then be extracted to feature
+        Size PaddedSz;              // Padded roi size
 
         vector<float> ScaleList;
         float ScaleRatio;
@@ -78,7 +79,7 @@ namespace zkcf {
         static float CalcSubPixelPeak(float left, float center, float right);   // Calculate sub-pixel peak for one dimension
 
         // Extract feature maps of roi which is padded and resized to specified template size.
-        void ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz) const;
+        void ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz, float scale = 1.0) const;
 
         // Eval response map, x => tmpl, z => test image patch
         Mat EvalResMap(const Mat &x, const Mat &z) const;

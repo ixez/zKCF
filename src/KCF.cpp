@@ -41,21 +41,23 @@ namespace zkcf {
         return res;
     }
 
-    void KCF::ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz) const {
-        Rect paddedRoi;
+    void KCF::ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz, float scale) const {
+        Rect pRoi;
 
         float cx = roi.x + roi.width / 2.0f;
         float cy = roi.y + roi.height / 2.0f;
 
         // Different from origin
-        paddedRoi.width = roi.width * Padding;
-        paddedRoi.height = roi.height * Padding;
+//        pRoi.width = roi.width * Padding;
+//        pRoi.height = roi.height * Padding;
+        pRoi.width = PaddedSz.width * ScaleRatio * scale;
+        pRoi.height = PaddedSz.height * ScaleRatio * scale;
 
         // center roi with new size
-        paddedRoi.x = cx - paddedRoi.width / 2;
-        paddedRoi.y = cy - paddedRoi.height / 2;
+        pRoi.x = cx - pRoi.width / 2;
+        pRoi.y = cy - pRoi.height / 2;
 
-        Mat z = RectTools::subwindow(frm, paddedRoi, BORDER_REPLICATE);
+        Mat z = RectTools::subwindow(frm, pRoi, BORDER_REPLICATE);
         if (z.size() != TmplSz) resize(z, z, TmplSz);
         feat = Feat->Extract(z, featSz);
     }
@@ -138,7 +140,7 @@ namespace zkcf {
             float _pv;
             Rect_<float> _roi = roi;
             RectTools::resize(_roi, _scale);
-            ExtractFeatures(frm, _roi, z, FeatSz);
+            ExtractFeatures(frm, _roi, z, FeatSz, _scale);
             assert(Hann.size() == z.size());
             z = Hann.mul(z);
             Point2f _res = Detect(ModelX, z, _pv);
@@ -247,8 +249,8 @@ namespace zkcf {
         ScaleWeight = 0.95;
 
         Lambda = 0.0001;
-        Padding = 2.5;
         OutputSigmaFactor = 0.125;
+        Padding = 2.5;
         switch (FeatType) {
             case FEAT_HOG:
                 LearningRate = 0.012;
@@ -256,29 +258,31 @@ namespace zkcf {
             case FEAT_HOG_LAB:
                 LearningRate = 0.005;
                 OutputSigmaFactor = 0.1;
+                Padding = 3.0;
                 break;
             case FEAT_RAW:
                 LearningRate = 0.075;
+                Padding = 3.0;
                 break;
         }
     }
 
     void KCF::TmplInit() {
-        int paddedW = Roi.width * Padding;
-        int paddedH = Roi.height * Padding;
+        PaddedSz.width = Roi.width * Padding;
+        PaddedSz.height = Roi.height * Padding;
 
         if (TmplMode == TMPL_MODE_CUSTOM) {
             // Fit largest dimension to the given length
             if (Roi.width >= Roi.height)  //fit to width
-                TmplRatio = paddedW / (float) TmplLen;
+                TmplRatio = PaddedSz.width / (float) TmplLen;
             else
-                TmplRatio = paddedH / (float) TmplLen;
+                TmplRatio = PaddedSz.height / (float) TmplLen;
 
-            TmplSz.width = paddedW / TmplRatio;
-            TmplSz.height = paddedH / TmplRatio;
+            TmplSz.width = PaddedSz.width / TmplRatio;
+            TmplSz.height = PaddedSz.height / TmplRatio;
         } else if (TmplMode == TMPL_MODE_ROI_SZ) {  //No template size given, use ROI size
-            TmplSz.width = paddedW;
-            TmplSz.height = paddedH;
+            TmplSz.width = PaddedSz.width;
+            TmplSz.height = PaddedSz.height;
             TmplRatio = 1;
         } else {
             std::cout << "Unknown template mode." << std::endl;
@@ -294,6 +298,9 @@ namespace zkcf {
         } else {
             //Make number of pixels even (helps with some logic involving half-dimensions)
         }
+
+        PaddedSz.width = TmplSz.width * TmplRatio;
+        PaddedSz.height = TmplSz.height * TmplRatio;
     }
 
     void KCF::ScalesInit() {
