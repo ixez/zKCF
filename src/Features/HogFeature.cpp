@@ -20,7 +20,7 @@ namespace zkcf {
         PCAFeatureMaps(map);
         sz.rows = map->sizeY;
         sz.cols = map->sizeX;
-        sz.cns = map->numFeatures;
+        sz.chns = map->numFeatures;
         Mat feat = Mat(Size(map->numFeatures, map->sizeX * map->sizeY), CV_32F, map->map);
 
         feat = feat.t();

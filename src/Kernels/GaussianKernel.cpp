@@ -14,7 +14,7 @@ namespace zkcf {
         Mat caux;
         Mat x1aux;
         Mat x2aux;
-        for (int i = 0; i < sz.cns; i++) {
+        for (int i = 0; i < sz.chns; i++) {
             x1aux = x1.row(i).reshape(1, sz.rows);
             x2aux = x2.row(i).reshape(1, sz.rows);
             mulSpectrums(fftd(x1aux), fftd(x2aux), caux, 0, true);
@@ -25,7 +25,7 @@ namespace zkcf {
         }
 
         Mat d;
-        max(((sum(x1.mul(x1))[0] + sum(x2.mul(x2))[0]) - 2. * c) / (sz.rows * sz.cols * sz.cns), 0, d);
+        max(((sum(x1.mul(x1))[0] + sum(x2.mul(x2))[0]) - 2. * c) / (sz.rows * sz.cols * sz.chns), 0, d);
 
         Mat k;
         exp(-d / (Sigma * Sigma), k);

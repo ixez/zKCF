@@ -72,7 +72,7 @@ namespace zkcf {
         }
 
         // Update size_patch[2] and add features to FeaturesMap
-        sz.cns += LabCentroids.rows;
+        sz.chns += LabCentroids.rows;
         feat.push_back(outputLab);
         return feat;
     }

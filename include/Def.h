@@ -8,7 +8,7 @@ namespace zkcf {
     typedef struct {
         int rows = 0;
         int cols = 0;
-        int cns = 0;
+        int chns = 0;
     } FeatureSize;
 
     typedef enum {
