@@ -235,25 +235,26 @@ namespace zkcf {
     }
 
     void KCF::ParamsInit() {
-        TmplLen = 96;
-
         // Scales
         EnableScale = true;
         ScaleN = 1;
         ScaleStep = 0.05;
         ScaleWeight = 0.95;
 
+        TmplLen = 96;
+        Padding = 3.6;
         Lambda = 0.0001;
         OutputSigmaFactor = 0.125;
-        Padding = 2.5;
         switch (FeatType) {
             case FEAT_HOG:
+                Padding = 3.4;
                 LearningRate = 0.012;
                 break;
             case FEAT_HOG_LAB:
+                TmplLen = 128;
+                Padding = 3.0;
                 LearningRate = 0.005;
                 OutputSigmaFactor = 0.1;
-                Padding = 3.0;
                 break;
             case FEAT_RAW:
                 LearningRate = 0.075;
