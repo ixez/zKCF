@@ -15,7 +15,8 @@ namespace zkcf {
         FEAT_HOG = 1,
         FEAT_HOG_LAB = 2,
         FEAT_GRAY = 3,
-        FEAT_RAW = 4
+        FEAT_RAW = 4,
+        FEAT_VGG = 5
     } FeatureType;
 
     typedef enum {

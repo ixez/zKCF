@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     Mat frm;
     Rect result;
 
-    KCF tracker(FeatureType::FEAT_HOG_LAB, KernelType::KRNL_GAUSSIAN);
+    KCF tracker(FeatureType::FEAT_VGG, KernelType::KRNL_GAUSSIAN);
 
     for (int frameId = conf.StartFrmId, i = 1; frameId <= conf.EndFrmId; ++frameId, ++i)
     {
