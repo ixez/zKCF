@@ -18,9 +18,13 @@ namespace zkcf {
         Mat Extract(const Mat& patch, FeatureSize& sz) const override;
     private:
         shared_ptr<Net<float> > Model;
-        FeatureSize ModelInputSz;
-        Mat ModelMean;
+        FeatureSize InputSz;
+        Blob<float> *InputLyr;
+        vector<Mat> InputChns;
+        Mat Mean;
 
-        Mat ModelMeanInit(const string &path, int chns);
+        Mat MeanInit(const string &path, int chns);
+        void InputLyrInit();
+        void Preprocess(const Mat &img, vector<Mat>& input_channels);
     };
 }
