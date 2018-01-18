@@ -13,6 +13,6 @@ namespace zkcf {
     class HogFeature : public IFeature {
     public:
         HogFeature();
-        Mat Extract(const Mat& patch, FeatureSize& sz) const override;
+        Mat Extract(const Mat& patch, FeatureSize& sz) override;
     };
 }

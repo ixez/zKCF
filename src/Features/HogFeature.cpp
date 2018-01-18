@@ -11,7 +11,7 @@ namespace zkcf {
     using namespace cv;
     HogFeature::HogFeature() { CellSize=4; }
 
-    Mat HogFeature::Extract(const Mat& patch, FeatureSize& sz) const {
+    Mat HogFeature::Extract(const Mat& patch, FeatureSize& sz) {
         using namespace fhog;
         IplImage z_ipl = patch;
         CvLSVMFeatureMapCaskade *map;

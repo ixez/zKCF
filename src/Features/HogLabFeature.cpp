@@ -28,7 +28,7 @@ namespace zkcf {
         LabCentroids = Mat(nClusters, 3, CV_32FC1, &clusters).clone();
     }
 
-    Mat HogLabFeature::Extract(const Mat &patch, FeatureSize &sz) const {
+    Mat HogLabFeature::Extract(const Mat &patch, FeatureSize &sz) {
         Mat feat=HogFeature::Extract(patch, sz);
         cv::Mat lab;
         cvtColor(patch, lab, CV_BGR2Lab);
