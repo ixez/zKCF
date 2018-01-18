@@ -21,14 +21,8 @@ namespace zkcf {
             Mean = MeanInit(meanPath, InputSz.chns);
         }
     }
-    Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) const {
+    Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) {
         Mat feat;
-
-        Blob<float> *input_layer = Model->input_blobs()[0];
-        input_layer->Reshape(1, InputSz.chns,
-                             InputSz.rows, InputSz.cols);
-        /* Forward dimension change to all layers. */
-        Model->Reshape();
 
         vector<Mat> input_channels;
         Preprocess(patch, InputChns);
@@ -74,11 +68,11 @@ namespace zkcf {
         InputSz.rows = InputLyr->height();
         InputSz.cols = InputLyr->width();
 
-        float *input_data = InputLyr->mutable_cpu_data();
+        float *data = InputLyr->mutable_cpu_data();
         for (int i = 0; i < InputSz.chns; ++i) {
-            Mat channel(InputSz.rows, InputSz.cols, CV_32FC1, input_data);
+            Mat channel(InputSz.rows, InputSz.cols, CV_32FC1, data);
             InputChns.push_back(channel);
-            input_data += InputSz.rows * InputSz.cols;
+            data += InputSz.rows * InputSz.cols;
         }
 
         InputLyr->Reshape(1, InputSz.chns, InputSz.rows, InputSz.cols);

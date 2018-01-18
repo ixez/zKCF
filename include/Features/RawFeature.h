@@ -13,6 +13,6 @@ namespace zkcf {
     class RawFeature : public IFeature {
     public:
         RawFeature();
-        Mat Extract(const Mat& patch, FeatureSize& sz) const override;
+        Mat Extract(const Mat& patch, FeatureSize& sz) override;
     };
 }
