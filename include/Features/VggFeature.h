@@ -22,9 +22,10 @@ namespace zkcf {
         Blob<float> *InputLyr;
         vector<Mat> InputChns;
         Mat Mean;
+        string LayerName;
 
         Mat MeanInit(const string &path, int chns);
         void InputLyrInit();
-        void Preprocess(const Mat &img, vector<Mat>& input_channels);
+        void Preprocess(const Mat &img, vector<Mat>& channels);
     };
 }

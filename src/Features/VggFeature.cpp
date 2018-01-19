@@ -23,9 +23,43 @@ namespace zkcf {
     }
     Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) {
         Mat feat;
-
-        vector<Mat> input_channels;
+        vector<Mat> inputChns;
         Preprocess(patch, InputChns);
+
+        CHECK((float *)&(InputChns.at(0).data) == Model->input_blobs()[0]->cpu_data())
+        << "Input channels are not wrapping the input layer of the network.";
+
+        CHECK(Model->has_blob(LayerName))
+        << "Unknown feature blob name " << LayerName << " in the network";
+
+        int layerId = -1;
+        for(int i=0;i<Model->layer_names().size();i++) {
+            if(LayerName==Model->layer_names()[i]) {
+                layerId=i;
+                break;
+            }
+        }
+        CHECK_GE(layerId, 0); CHECK_LT(layerId, Model->layers().size());
+
+        Model->ForwardFromTo(0,layerId);
+        //    Model->Forward();
+
+        /* Copy the output layer to a std::vector */
+        const boost::shared_ptr<Blob<float>> blob = Model->blob_by_name(LayerName);
+        float *blobData=blob->mutable_cpu_data();
+        std::vector<cv::Mat> outputChns;
+
+//        cv::Mat featureMap(blob->channels(),mapSize.height*mapSize.width,CV_32FC1);
+//        size_x=mapSize.width;
+//        size_y=mapSize.height;
+//        size_c=blob->channels();
+//        for (int d = 0; d < blob->channels(); ++d) {
+//            cv::Mat tc(blob->height(),blob->width(),CV_32FC1,blobData);
+//            tc=tc/256.f;
+//            cv::resize(tc,tc,mapSize);
+//            tc.reshape(1,1).copyTo(featureMap.row(d));
+//            blobData += blob->height() * blob->width();
+//        }
 
         sz.rows = feat.rows;
         sz.cols = feat.cols;
@@ -34,22 +68,22 @@ namespace zkcf {
     }
 
     Mat VggFeature::MeanInit(const string &path, int chns) {
-        BlobProto blob_proto;
-        ReadProtoFromBinaryFileOrDie(path.c_str(), &blob_proto);
+        BlobProto blobProto;
+        ReadProtoFromBinaryFileOrDie(path.c_str(), &blobProto);
 
         /* Convert from BlobProto to Blob<float> */
-        Blob<float> mean_blob;
-        mean_blob.FromProto(blob_proto);
-        CHECK_EQ(mean_blob.channels(), InputSz.chns) << "Number of channels of mean file doesn't match input layer.";
+        Blob<float> meanBlob;
+        meanBlob.FromProto(blobProto);
+        CHECK_EQ(meanBlob.channels(), InputSz.chns) << "Number of channels of mean file doesn't match input layer.";
 
         /* The format of the mean file is planar 32-bit float BGR or grayscale. */
         vector<Mat> channels;
-        float *data = mean_blob.mutable_cpu_data();
+        float *data = meanBlob.mutable_cpu_data();
         for (int i = 0; i < chns; ++i) {
             /* Extract an individual channel. */
-            Mat channel(mean_blob.height(), mean_blob.width(), CV_32FC1, data);
+            Mat channel(meanBlob.height(), meanBlob.width(), CV_32FC1, data);
             channels.push_back(channel);
-            data += mean_blob.height() * mean_blob.width();
+            data += meanBlob.height() * meanBlob.width();
         }
 
         /* Merge the separate channels into a single image. */
@@ -59,7 +93,7 @@ namespace zkcf {
         /* Compute the global mean pixel value and create a mean image
          * filled with this value. */
         Scalar channel_mean = cv::mean(mean);
-        Mean = Mat(Size(InputSz.cols,InputSz.rows), mean.type(), channel_mean);
+        Mean = Mat(InputSz.SizeWH(), mean.type(), channel_mean);
     }
 
     void VggFeature::InputLyrInit() {
@@ -80,48 +114,22 @@ namespace zkcf {
     }
 
     void VggFeature::Preprocess(const Mat &img,
-                                vector<Mat>& input_channels) {
-        /* Convert the input image to the input image format of the network. */
-        Mat sample;
-        if (img.channels() == 3 && num_channels_ == 1)
-            cvtColor(img, sample, COLOR_BGR2GRAY);
-        else if (img.channels() == 4 && num_channels_ == 1)
-            cvtColor(img, sample, COLOR_BGRA2GRAY);
-        else if (img.channels() == 4 && num_channels_ == 3)
-            cvtColor(img, sample, COLOR_BGRA2BGR);
-        else if (img.channels() == 1 && num_channels_ == 3)
-            cvtColor(img, sample, COLOR_GRAY2BGR);
+                                vector<Mat>& channels) {
+        Mat img_;
+        if (img.size() != InputSz.SizeWH())
+            resize(img, img_, InputSz.SizeWH());
         else
-            sample = img;
+            img_ = img.clone();
 
-        Mat sample_resized;
-        if (sample.size() != input_geometry_)
-            resize(sample, sample_resized, input_geometry_);
-        else
-            sample_resized = sample;
+        img_.convertTo(img_, CV_32FC3);
 
-        Mat sample_float;
-        if (num_channels_ == 3)
-            sample_resized.convertTo(sample_float, CV_32FC3);
-        else
-            sample_resized.convertTo(sample_float, CV_32FC1);
-
-        if(mean_.empty()) {
-            split(sample_float, *input_channels);
+        if(Mean.empty()) {
+            split(img_, channels);
         }
         else {
-            Mat sample_normalized;
-            subtract(sample_float, mean_, sample_normalized);
-
-            /* This operation will write the separate BGR planes directly to the
-             * input layer of the network because it is wrapped by the Mat
-             * objects in input_channels. */
-            split(sample_normalized, *input_channels);
+            subtract(img_, Mean, img_);
+            split(img_, channels);
         }
-
-        CHECK(reinterpret_cast<float *>(input_channels->at(0).data)
-              == net_->input_blobs()[0]->cpu_data())
-        << "Input channels are not wrapping the input layer of the network.";
     }
 }
 
