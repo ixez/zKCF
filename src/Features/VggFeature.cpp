@@ -4,29 +4,38 @@ Website: https://ixez.github.io
 Email: sachika.misawa@outlook.com
 */
 #include "Features/VggFeature.h"
-#include <opencv2/opencv.hpp>
-#include <Def.h>
 
 namespace zkcf {
     using namespace cv;
     using namespace caffe;
     using namespace std;
-    VggFeature::VggFeature(const string& modelPath, const string& weightsPath, const string& meanPath) {
+
+    VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName,
+                           const string *meanPath, const Scalar *meanVal) {
         CellSize=1;
         Model.reset(new Net<float>(modelPath, TEST));
         Model->CopyTrainedLayersFrom(weightsPath);
 
         InputLyrInit();
-        if(!meanPath.empty()) {
-            Mean = MeanInit(meanPath, InputSz.chns);
+
+        LayerName=layerName;
+
+        if(meanPath != nullptr) {
+            MeanInit(*meanPath);
+        }
+        else if(meanVal != nullptr) {
+            MeanInit(*meanVal);
+        }
+        else {
+            Mean.setTo(0);
         }
     }
-    Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) {
-        Mat feat;
-        vector<Mat> inputChns;
-        Preprocess(patch, InputChns);
 
-        CHECK((float *)&(InputChns.at(0).data) == Model->input_blobs()[0]->cpu_data())
+    Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) {
+        vector<Mat> inputChns;
+        Preprocess(patch, InputMats);
+
+        CHECK((float *)&(InputMats.at(0).data) == Model->input_blobs()[0]->cpu_data())
         << "Input channels are not wrapping the input layer of the network.";
 
         CHECK(Model->has_blob(LayerName))
@@ -49,51 +58,18 @@ namespace zkcf {
         float *blobData=blob->mutable_cpu_data();
         std::vector<cv::Mat> outputChns;
 
-//        cv::Mat featureMap(blob->channels(),mapSize.height*mapSize.width,CV_32FC1);
-//        size_x=mapSize.width;
-//        size_y=mapSize.height;
-//        size_c=blob->channels();
-//        for (int d = 0; d < blob->channels(); ++d) {
-//            cv::Mat tc(blob->height(),blob->width(),CV_32FC1,blobData);
-//            tc=tc/256.f;
-//            cv::resize(tc,tc,mapSize);
-//            tc.reshape(1,1).copyTo(featureMap.row(d));
-//            blobData += blob->height() * blob->width();
-//        }
-
-        sz.rows = feat.rows;
-        sz.cols = feat.cols;
-        sz.chns = 1;
-        return feat.reshape(1, 1);
-    }
-
-    Mat VggFeature::MeanInit(const string &path, int chns) {
-        BlobProto blobProto;
-        ReadProtoFromBinaryFileOrDie(path.c_str(), &blobProto);
-
-        /* Convert from BlobProto to Blob<float> */
-        Blob<float> meanBlob;
-        meanBlob.FromProto(blobProto);
-        CHECK_EQ(meanBlob.channels(), InputSz.chns) << "Number of channels of mean file doesn't match input layer.";
-
-        /* The format of the mean file is planar 32-bit float BGR or grayscale. */
-        vector<Mat> channels;
-        float *data = meanBlob.mutable_cpu_data();
-        for (int i = 0; i < chns; ++i) {
-            /* Extract an individual channel. */
-            Mat channel(meanBlob.height(), meanBlob.width(), CV_32FC1, data);
-            channels.push_back(channel);
-            data += meanBlob.height() * meanBlob.width();
+        Mat feat(blob->channels(),blob->width()*blob->height(),CV_32FC1);
+        for (int d = 0; d < blob->channels(); ++d) {
+            cv::Mat blobMat(blob->height(),blob->width(),CV_32FC1,blobData);
+            blobMat=blobMat/256.f;
+            blobMat.reshape(1,1).copyTo(feat.row(d));
+            blobData += blob->height() * blob->width();
         }
 
-        /* Merge the separate channels into a single image. */
-        Mat mean;
-        merge(channels, mean);
-
-        /* Compute the global mean pixel value and create a mean image
-         * filled with this value. */
-        Scalar channel_mean = cv::mean(mean);
-        Mean = Mat(InputSz.SizeWH(), mean.type(), channel_mean);
+        sz.rows = blob->height();
+        sz.cols = blob->width();
+        sz.chns = blob->channels();
+        return feat;
     }
 
     void VggFeature::InputLyrInit() {
@@ -105,7 +81,7 @@ namespace zkcf {
         float *data = InputLyr->mutable_cpu_data();
         for (int i = 0; i < InputSz.chns; ++i) {
             Mat channel(InputSz.rows, InputSz.cols, CV_32FC1, data);
-            InputChns.push_back(channel);
+            InputMats.push_back(channel);
             data += InputSz.rows * InputSz.cols;
         }
 
@@ -130,6 +106,40 @@ namespace zkcf {
             subtract(img_, Mean, img_);
             split(img_, channels);
         }
+    }
+
+    void VggFeature::MeanInit(const string &path) {
+        BlobProto blobProto;
+        ReadProtoFromBinaryFileOrDie(path.c_str(), &blobProto);
+
+        /* Convert from BlobProto to Blob<float> */
+        Blob<float> meanBlob;
+        meanBlob.FromProto(blobProto);
+        CHECK_EQ(meanBlob.channels(), InputSz.chns) << "Number of channels of mean file doesn't match input layer.";
+
+        /* The format of the mean file is planar 32-bit float BGR or grayscale. */
+        vector<Mat> channels;
+        float *data = meanBlob.mutable_cpu_data();
+        for (int i = 0; i < InputSz.chns; ++i) {
+            /* Extract an individual channel. */
+            Mat channel(meanBlob.height(), meanBlob.width(), CV_32FC1, data);
+            channels.push_back(channel);
+            data += meanBlob.height() * meanBlob.width();
+        }
+
+        /* Merge the separate channels into a single image. */
+        Mat mean;
+        merge(channels, mean);
+
+        /* Compute the global mean pixel value and create a mean image
+         * filled with this value. */
+        Scalar meanVal = cv::mean(mean);
+        Mean = Mat(InputSz.SizeWH(), mean.type(), meanVal);
+    }
+
+
+    void VggFeature::MeanInit(const Scalar &meanVal) {
+        Mean = Mat(InputSz.SizeWH(), CV_32FC1, meanVal);
     }
 }
 

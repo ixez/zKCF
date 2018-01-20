@@ -14,17 +14,19 @@ namespace zkcf {
     using namespace caffe;
     class VggFeature : public IFeature {
     public:
-        VggFeature(const string& modelPath, const string& weightsPath, const string& meanPath);
+        VggFeature(const string &modelPath, const string &weightsPath, const string &layerName,
+                   const string *meanPath = nullptr, const Scalar *meanVal = nullptr);
         Mat Extract(const Mat& patch, FeatureSize& sz) override;
     private:
         shared_ptr<Net<float> > Model;
         FeatureSize InputSz;
         Blob<float> *InputLyr;
-        vector<Mat> InputChns;
+        vector<Mat> InputMats;
         Mat Mean;
         string LayerName;
 
-        Mat MeanInit(const string &path, int chns);
+        void MeanInit(const string &path);
+        void MeanInit(const Scalar &meanVal);
         void InputLyrInit();
         void Preprocess(const Mat &img, vector<Mat>& channels);
     };
