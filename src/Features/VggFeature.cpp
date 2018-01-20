@@ -10,8 +10,7 @@ namespace zkcf {
     using namespace caffe;
     using namespace std;
 
-    VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName,
-                           const string *meanPath, const Scalar *meanVal) {
+    VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName) {
         CellSize=1;
         Model.reset(new Net<float>(modelPath, TEST));
         Model->CopyTrainedLayersFrom(weightsPath);
@@ -19,16 +18,7 @@ namespace zkcf {
         InputLyrInit();
 
         LayerName=layerName;
-
-        if(meanPath != nullptr) {
-            MeanInit(*meanPath);
-        }
-        else if(meanVal != nullptr) {
-            MeanInit(*meanVal);
-        }
-        else {
-            Mean.setTo(0);
-        }
+        MeanInit(Scalar(103.939, 116.779, 123.68));
     }
 
     Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) {
