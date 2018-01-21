@@ -12,6 +12,11 @@ namespace zkcf {
 
     VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName) {
         CellSize=1;
+#ifdef CPU_ONLY
+        Caffe::set_mode(Caffe::CPU);
+#else
+        Caffe::set_mode(Caffe::GPU);
+#endif
         Model.reset(new Net<float>(modelPath, TEST));
         Model->CopyTrainedLayersFrom(weightsPath);
 
@@ -25,7 +30,7 @@ namespace zkcf {
         vector<Mat> inputChns;
         Preprocess(patch, InputMats);
 
-        CHECK((float *)&(InputMats.at(0).data) == Model->input_blobs()[0]->cpu_data())
+        CHECK((float*)InputMats.at(0).data == Model->input_blobs()[0]->cpu_data())
         << "Input channels are not wrapping the input layer of the network.";
 
         CHECK(Model->has_blob(LayerName))
@@ -67,16 +72,14 @@ namespace zkcf {
         InputSz.chns = InputLyr->channels();
         InputSz.rows = InputLyr->height();
         InputSz.cols = InputLyr->width();
-
+        InputLyr->Reshape(1, InputSz.chns, InputSz.rows, InputSz.cols);
+        Model->Reshape();
         float *data = InputLyr->mutable_cpu_data();
         for (int i = 0; i < InputSz.chns; ++i) {
             Mat channel(InputSz.rows, InputSz.cols, CV_32FC1, data);
             InputMats.push_back(channel);
             data += InputSz.rows * InputSz.cols;
         }
-
-        InputLyr->Reshape(1, InputSz.chns, InputSz.rows, InputSz.cols);
-        Model->Reshape();
     }
 
     void VggFeature::Preprocess(const Mat &img,
@@ -129,7 +132,7 @@ namespace zkcf {
 
 
     void VggFeature::MeanInit(const Scalar &meanVal) {
-        Mean = Mat(InputSz.SizeWH(), CV_32FC1, meanVal);
+        Mean = Mat(InputSz.SizeWH(), CV_32FC3, meanVal);
     }
 }
 

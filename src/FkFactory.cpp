@@ -3,6 +3,7 @@ Author: iXez
 Website: https://ixez.github.io
 Email: sachika.misawa@outlook.com
 */
+#include "Features/VggFeature.h"
 #include "FkFactory.h"
 namespace zkcf {
     void FkFactory(FeatureType ft, KernelType kt, IFeature *&f, IKernel *&k) {
@@ -16,6 +17,14 @@ namespace zkcf {
             case FEAT_RAW:
                 f = new RawFeature();
                 break;
+#ifdef BUILD_VGG
+            case FEAT_VGG:
+                f = new VggFeature("./assets/vgg/VGG_ILSVRC_16_layers_deploy.prototxt.txt",
+                                   "./assets/vgg/VGG_ILSVRC_16_layers.caffemodel",
+                                   "conv1_1"
+                );
+                break;
+#endif
             default:
                 break;
         }
@@ -24,10 +33,15 @@ namespace zkcf {
                 k = new GaussianKernel;
                 if (ft == FEAT_HOG) {
                     ((GaussianKernel *) k)->Sigma = 0.6;
-                } else if (ft == FEAT_HOG_LAB) {
+                }
+                else if (ft == FEAT_HOG_LAB) {
                     ((GaussianKernel *) k)->Sigma = 0.4;
-                } else if (ft == FEAT_RAW) {
+                }
+                else if (ft == FEAT_RAW) {
                     ((GaussianKernel *) k)->Sigma = 0.2;
+                }
+                else {
+                    ((GaussianKernel *) k)->Sigma = 0.6;
                 }
                 break;
             default:
