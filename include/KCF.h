@@ -24,7 +24,7 @@ namespace zkcf {
 
         //// Configurable params
         // Template
-        eTemplateMode TmplMode = TMPL_MODE_CUSTOM;
+        eTemplateMode TmplMode;
         int TmplLen;                // Used when TMPL_MODE_CUSTOM
         // Scale
         bool EnableScale;

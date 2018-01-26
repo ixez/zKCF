@@ -12,7 +12,9 @@ namespace zkcf {
     using namespace cv;
     class RawFeature : public IFeature {
     public:
-        RawFeature();
+        explicit RawFeature(bool color=true);
         Mat Extract(const Mat& patch, FeatureSize& sz) override;
+    private:
+        bool Color;
     };
 }

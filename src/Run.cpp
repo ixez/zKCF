@@ -19,6 +19,8 @@ int main(int argc, char* argv[])
     Rect result;
 
     KCF tracker(FeatureType::FEAT_VGG, KernelType::KRNL_GAUSSIAN);
+//    KCF tracker(FeatureType::FEAT_RAW, KernelType::KRNL_GAUSSIAN);
+//    KCF tracker(FeatureType::FEAT_HOG, KernelType::KRNL_GAUSSIAN);
 
     for (int frameId = conf.StartFrmId, i = 1; frameId <= conf.EndFrmId; ++frameId, ++i)
     {

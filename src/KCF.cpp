@@ -137,7 +137,17 @@ namespace zkcf {
             RectTools::resize(_roi, _scale);
             ExtractFeatures(frm, _roi, z, FeatSz, _scale);
             assert(Hann.size() == z.size());
+
+            Mat prev;
+            vector<Mat> prevMats;
+            for(int c=0; c<3; c++) {
+                prevMats.push_back(z.row(c).reshape(1,FeatSz.rows));
+            }
+            merge(prevMats,prev);
+            imshow("Feature",prev);
+
             z = Hann.mul(z);
+
             Point2f _res = Detect(ModelX, z, _pv);
 
             if (_scale != 1.0f) _pv *= ScaleWeight;
@@ -235,8 +245,9 @@ namespace zkcf {
     }
 
     void KCF::ParamsInit() {
+        TmplMode = TMPL_MODE_CUSTOM;
         // Scales
-        EnableScale = true;
+        EnableScale = false;
         ScaleN = 1;
         ScaleStep = 0.05;
         ScaleWeight = 0.95;
@@ -245,10 +256,10 @@ namespace zkcf {
         Padding = 3.6;
         Lambda = 0.0001;
         OutputSigmaFactor = 0.125;
+        LearningRate = 0.012;
         switch (FeatType) {
             case FEAT_HOG:
                 Padding = 3.4;
-                LearningRate = 0.012;
                 break;
             case FEAT_HOG_LAB:
                 TmplLen = 128;
@@ -259,7 +270,8 @@ namespace zkcf {
             case FEAT_RAW:
                 LearningRate = 0.075;
                 Padding = 3.0;
-                break;
+
+            case FEAT_GRAY:break;
         }
     }
 

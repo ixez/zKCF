@@ -4,7 +4,8 @@ project(zKCF)
 option(BUILD_VGG "Build VGG features." OFF)
 
 find_package(OpenCV REQUIRED)
-set(dep ${OpenCV_LIBS})
+set(dep_libs ${OpenCV_LIBS})
+set(dep_include_dirs "")
 
 set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(src
@@ -51,16 +52,16 @@ set(include
 
 if(BUILD_VGG)
     find_package(Caffe REQUIRED)
-    set(include_dir ${include_dir} ${Caffe_INCLUDE_DIRS})
+    set(dep_include_dirs ${Caffe_INCLUDE_DIRS})
+    set(dep_libs ${dep_libs} ${Caffe_LIBRARIES})
     set(include ${include} ${include_dir}/Features/VggFeature.h)
     set(src ${src} ${src_dir}/Features/VggFeature.cpp)
-    set(dep ${dep} ${Caffe_LIBRARIES})
     set(def ${def} BUILD_VGG)
 endif()
 
 add_executable(zKCF ${src} ${include})
-target_include_directories(zKCF PRIVATE ${include_dir})
-target_link_libraries(zKCF ${dep})
+target_include_directories(zKCF PRIVATE ${include_dir} ${dep_include_dirs})
+target_link_libraries(zKCF ${dep_libs})
 target_compile_definitions(zKCF PRIVATE ${def})
 
 set_target_properties(zKCF PROPERTIES
