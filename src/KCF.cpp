@@ -140,10 +140,11 @@ namespace zkcf {
 
             Mat prev;
             vector<Mat> prevMats;
-            for(int c=0; c<3; c++) {
+            for(int c=3; c<6; c++) {
                 prevMats.push_back(z.row(c).reshape(1,FeatSz.rows));
             }
             merge(prevMats,prev);
+            resize(prev,prev,Size(300,300));
             imshow("Feature",prev);
 
             z = Hann.mul(z);
@@ -160,8 +161,10 @@ namespace zkcf {
             rectangle(_frm, _roi, CV_RGB(255, 255, 255), 1);
         }
 
-        cx += (res.x * Feat->CellSize * TmplRatio * ScaleRatio * scale);
-        cy += (res.y * Feat->CellSize * TmplRatio * ScaleRatio * scale);
+//        cx += (res.x * Feat->CellSize * TmplRatio * ScaleRatio * scale);
+//        cy += (res.y * Feat->CellSize * TmplRatio * ScaleRatio * scale);
+        cx += (res.x * TmplRatio * ScaleRatio * scale);
+        cy += (res.y * TmplRatio * ScaleRatio * scale);
 
         roi.x = cx - roi.width / 2.0f;
         roi.y = cy - roi.height / 2.0f;
@@ -196,6 +199,9 @@ namespace zkcf {
         using namespace FFTTools;
 
         Mat res = EvalResMap(x, z);
+        Mat res_;
+        resize(res,res_,Size(300,300));
+        imshow("res",res_);
         Point2i _pl;
         double _pv;
         minMaxLoc(res, NULL, &_pv, NULL, &_pl);
@@ -270,8 +276,11 @@ namespace zkcf {
             case FEAT_RAW:
                 LearningRate = 0.075;
                 Padding = 3.0;
-
             case FEAT_GRAY:break;
+            case FEAT_VGG:
+                LearningRate = 0.0001;
+                TmplMode = TMPL_MODE_ROI_SZ;
+                break;
         }
     }
 
