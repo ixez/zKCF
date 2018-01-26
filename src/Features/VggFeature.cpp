@@ -30,7 +30,7 @@ namespace zkcf {
         vector<Mat> inputChns;
         Preprocess(patch, InputMats);
 
-        CHECK((float*)InputMats.at(0).data == Model->input_blobs()[0]->cpu_data())
+        CHECK((float*)InputMats.at(0).data == Model->input_blobs()[0]->mutable_cpu_data())
         << "Input channels are not wrapping the input layer of the network.";
 
         CHECK(Model->has_blob(LayerName))
@@ -45,25 +45,35 @@ namespace zkcf {
         }
         CHECK_GE(layerId, 0); CHECK_LT(layerId, Model->layers().size());
 
-        Model->ForwardFromTo(0,layerId);
-        //    Model->Forward();
+        Model->ForwardFromTo(0,layerId+1);
+//        Model->Forward();
 
         /* Copy the output layer to a std::vector */
         const boost::shared_ptr<Blob<float>> blob = Model->blob_by_name(LayerName);
-        float *blobData=blob->mutable_cpu_data();
         std::vector<cv::Mat> outputChns;
 
-        Mat feat(blob->channels(),blob->width()*blob->height(),CV_32FC1);
-        for (int d = 0; d < blob->channels(); ++d) {
-            cv::Mat blobMat(blob->height(),blob->width(),CV_32FC1,blobData);
-            blobMat=blobMat/256.f;
+        sz.rows = patch.rows/CellSize;
+        sz.cols = patch.cols/CellSize;
+        sz.chns = blob->channels();
+//        sz.chns = 3;
+        Mat feat(sz.chns,sz.rows*sz.cols,CV_32F);
+
+        float *blobData=blob->mutable_cpu_data();
+
+        for (int d = 0; d < sz.chns; ++d) {
+            cv::Mat blobMat(blob->height(),blob->width(),CV_32F,blobData);
+            resize(blobMat,blobMat,sz.SizeWH());
             blobMat.reshape(1,1).copyTo(feat.row(d));
             blobData += blob->height() * blob->width();
         }
 
-        sz.rows = blob->height();
-        sz.cols = blob->width();
-        sz.chns = blob->channels();
+        feat.convertTo(feat, CV_32F, 1 / 255.f);
+
+        Blob<float>* output_layer = Model->output_blobs()[0];
+        const float* begin = output_layer->cpu_data();
+        const float* end = begin + output_layer->channels();
+        vector<float> outputVec(begin, end);
+
         return feat;
     }
 
@@ -89,7 +99,6 @@ namespace zkcf {
             resize(img, img_, InputSz.SizeWH());
         else
             img_ = img.clone();
-
         img_.convertTo(img_, CV_32FC3);
 
         if(Mean.empty()) {

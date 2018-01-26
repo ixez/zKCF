@@ -17,6 +17,9 @@ namespace zkcf {
             case FEAT_RAW:
                 f = new RawFeature();
                 break;
+            case FEAT_GRAY:
+                f = new RawFeature(false);
+                break;
 #ifdef BUILD_VGG
             case FEAT_VGG:
                 f = new VggFeature("./assets/vgg/VGG_ILSVRC_16_layers_deploy.prototxt.txt",
