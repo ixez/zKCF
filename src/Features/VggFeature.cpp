@@ -10,7 +10,8 @@ namespace zkcf {
     using namespace caffe;
     using namespace std;
 
-    VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName) {
+    VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName,
+                           const string &meanPath) {
         CellSize=1;
 #ifdef CPU_ONLY
         Caffe::set_mode(Caffe::CPU);
@@ -23,10 +24,21 @@ namespace zkcf {
         InputLyrInit();
 
         LayerName=layerName;
-        MeanInit(Scalar(103.939, 116.779, 123.68));
+
+        if(!meanPath.empty()) {
+            MeanInit(meanPath);
+        }
+        else {
+            MeanInit(Scalar(103.939, 116.779, 123.68));
+        }
     }
 
     Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) {
+#ifdef CPU_ONLY
+        Caffe::set_mode(Caffe::CPU);
+#else
+        Caffe::set_mode(Caffe::GPU);
+#endif
         vector<Mat> inputChns;
         Preprocess(patch, InputMats);
 
@@ -45,35 +57,28 @@ namespace zkcf {
         }
         CHECK_GE(layerId, 0); CHECK_LT(layerId, Model->layers().size());
 
-        Model->ForwardFromTo(0,layerId+1);
-//        Model->Forward();
+//        Model->ForwardFromTo(0,layerId+1);
+        Model->Forward();
 
         /* Copy the output layer to a std::vector */
         const boost::shared_ptr<Blob<float>> blob = Model->blob_by_name(LayerName);
         std::vector<cv::Mat> outputChns;
 
-        sz.rows = patch.rows/CellSize;
-        sz.cols = patch.cols/CellSize;
+        sz.rows = blob->height();
+        sz.cols = blob->width();
         sz.chns = blob->channels();
-//        sz.chns = 3;
+//        sz.chns = 10;
         Mat feat(sz.chns,sz.rows*sz.cols,CV_32F);
 
         float *blobData=blob->mutable_cpu_data();
 
         for (int d = 0; d < sz.chns; ++d) {
             cv::Mat blobMat(blob->height(),blob->width(),CV_32F,blobData);
-            resize(blobMat,blobMat,sz.SizeWH());
             blobMat.reshape(1,1).copyTo(feat.row(d));
             blobData += blob->height() * blob->width();
         }
 
-        feat.convertTo(feat, CV_32F, 1 / 255.f);
-
-        Blob<float>* output_layer = Model->output_blobs()[0];
-        const float* begin = output_layer->cpu_data();
-        const float* end = begin + output_layer->channels();
-        vector<float> outputVec(begin, end);
-
+        feat /= 255.f;
         return feat;
     }
 
