@@ -28,7 +28,7 @@ namespace zkcf {
 //                );
                 f = new VggFeature("./assets/vgg/VGG_CNN_M_2048_deploy.prototxt",
                                    "./assets/vgg/VGG_CNN_M_2048.caffemodel",
-                                   "norm1",
+                                   "conv2",
                                    "./assets/vgg/VGG_mean.binaryproto"
                                    );
                 break;

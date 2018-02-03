@@ -14,5 +14,6 @@ namespace zkcf {
     public:
         HogFeature();
         Mat Extract(const Mat& patch, FeatureSize& sz) override;
+        int CellSize;
     };
 }

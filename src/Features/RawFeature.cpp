@@ -8,7 +8,7 @@ Email: sachika.misawa@outlook.com
 namespace zkcf {
     using namespace cv;
     RawFeature::RawFeature(bool color) {
-        CellSize=1;
+        FeatureRatio=1;
         Color=color;
     }
     Mat RawFeature::Extract(const Mat &patch, FeatureSize &sz) {
