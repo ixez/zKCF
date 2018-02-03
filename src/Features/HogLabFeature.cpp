@@ -6,7 +6,6 @@ namespace zkcf {
 
     HogLabFeature::HogLabFeature()
     {
-        CellSize=4;
         int nClusters=15;
         float clusters[nClusters][3] = {
             {161.317504, 127.223401, 128.609333},

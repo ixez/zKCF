@@ -138,14 +138,14 @@ namespace zkcf {
             ExtractFeatures(frm, _roi, z, FeatSz, _scale);
             assert(Hann.size() == z.size());
 
-            Mat prev;
-            vector<Mat> prevMats;
-            for(int c=3; c<6; c++) {
-                prevMats.push_back(z.row(c).reshape(1,FeatSz.rows));
-            }
-            merge(prevMats,prev);
-            resize(prev,prev,Size(300,300));
-            imshow("Feature",prev);
+//            Mat prev;
+//            vector<Mat> prevMats;
+//            for(int c=3; c<6; c++) {
+//                prevMats.push_back(z.row(c).reshape(1,FeatSz.rows));
+//            }
+//            merge(prevMats,prev);
+//            resize(prev,prev,Size(300,300));
+//            imshow("Feature",prev);
 
             z = Hann.mul(z);
 
@@ -161,10 +161,10 @@ namespace zkcf {
             rectangle(_frm, _roi, CV_RGB(255, 255, 255), 1);
         }
 
-//        cx += (res.x * Feat->CellSize * TmplRatio * ScaleRatio * scale);
-//        cy += (res.y * Feat->CellSize * TmplRatio * ScaleRatio * scale);
-        cx += (res.x * TmplRatio * ScaleRatio * scale);
-        cy += (res.y * TmplRatio * ScaleRatio * scale);
+        cx += (res.x * Feat->FeatureRatio * TmplRatio * ScaleRatio * scale);
+        cy += (res.y * Feat->FeatureRatio * TmplRatio * ScaleRatio * scale);
+//        cx += (res.x * TmplRatio * ScaleRatio * scale);
+//        cy += (res.y * TmplRatio * ScaleRatio * scale);
 
         roi.x = cx - roi.width / 2.0f;
         roi.y = cy - roi.height / 2.0f;
@@ -199,9 +199,9 @@ namespace zkcf {
         using namespace FFTTools;
 
         Mat res = EvalResMap(x, z);
-        Mat res_;
-        resize(res,res_,Size(300,300));
-        imshow("res",res_);
+//        Mat res_;
+//        resize(res,res_,Size(300,300));
+//        imshow("res",res_);
         Point2i _pl;
         double _pv;
         minMaxLoc(res, NULL, &_pv, NULL, &_pl);
@@ -253,7 +253,7 @@ namespace zkcf {
     void KCF::ParamsInit() {
         TmplMode = TMPL_MODE_CUSTOM;
         // Scales
-        EnableScale = false;
+        EnableScale = true;
         ScaleN = 1;
         ScaleStep = 0.05;
         ScaleWeight = 0.95;
@@ -305,15 +305,14 @@ namespace zkcf {
             std::cout << "Unknown template mode." << std::endl;
         }
 
-        // Round to cell size and also make it even (Hog is sensitive on this)
-        TmplSz.width = TmplSz.width / (2 * Feat->CellSize) * (2 * Feat->CellSize);
-        TmplSz.height = TmplSz.height / (2 * Feat->CellSize) * (2 * Feat->CellSize);
-
         if (FeatType == FEAT_HOG || FeatType == FEAT_HOG_LAB) {
-            TmplSz.width += Feat->CellSize * 2;
-            TmplSz.height += Feat->CellSize * 2;
+            int cellSize = ((HogFeature*)Feat)->CellSize;
+            // Round to cell size and also make it even (Hog is sensitive on this)
+            TmplSz.width = TmplSz.width / (2 * cellSize) * (2 * cellSize);
+            TmplSz.height = TmplSz.height / (2 * cellSize) * (2 * cellSize);
+            TmplSz.width += cellSize * 2;
+            TmplSz.height += cellSize * 2;
         } else {
-            //Make number of pixels even (helps with some logic involving half-dimensions)
         }
 
         PaddedSz.width = TmplSz.width * TmplRatio;

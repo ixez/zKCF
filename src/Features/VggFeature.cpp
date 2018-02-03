@@ -12,7 +12,7 @@ namespace zkcf {
 
     VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName,
                            const string &meanPath) {
-        CellSize=1;
+//        CellSize=1;
 #ifdef CPU_ONLY
         Caffe::set_mode(Caffe::CPU);
 #else
@@ -31,9 +31,11 @@ namespace zkcf {
         else {
             MeanInit(Scalar(103.939, 116.779, 123.68));
         }
+
     }
 
     Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) {
+        FeatureRatio = (float)patch.cols / Model->blob_by_name(LayerName)->width();
 #ifdef CPU_ONLY
         Caffe::set_mode(Caffe::CPU);
 #else
@@ -78,7 +80,10 @@ namespace zkcf {
             blobData += blob->height() * blob->width();
         }
 
-        feat /= 255.f;
+        double min, max;
+        cv::minMaxLoc(feat, &min, &max);
+
+        feat /= max;
         return feat;
     }
 
