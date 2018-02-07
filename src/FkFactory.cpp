@@ -22,15 +22,16 @@ namespace zkcf {
                 break;
 #ifdef BUILD_VGG
             case FEAT_VGG:
-//                f = new VggFeature("./assets/vgg/VGG_ILSVRC_16_layers_deploy.prototxt.txt",
-//                                   "./assets/vgg/VGG_ILSVRC_16_layers.caffemodel",
-//                                   "./assets/vgg/VGG_mean.binaryproto",
-//                                   "conv1_1"
-//                );
-                f = new VggFeature("./assets/vgg/VGG_CNN_M_2048_deploy.prototxt",
-                                   "./assets/vgg/VGG_CNN_M_2048.caffemodel",
-                                   "conv1"
-                                   );
+                f = new VggFeature("/home/zeke/Codes/zKCF/assets/vgg/VGG_ILSVRC_16_layers_deploy.prototxt.txt",
+                                   "/home/zeke/Codes/zKCF/assets/vgg/VGG_ILSVRC_16_layers.caffemodel",
+                                   "conv1_1",
+                                   "/home/zeke/Libs/caffe/data/ilsvrc12/imagenet_mean.binaryproto",
+                                   nullptr
+                );
+//                f = new VggFeature("./assets/vgg/VGG_CNN_M_2048_deploy.prototxt",
+//                                   "./assets/vgg/VGG_CNN_M_2048.caffemodel",
+//                                   "conv1"
+//                                   );
                 break;
 #endif
             default:

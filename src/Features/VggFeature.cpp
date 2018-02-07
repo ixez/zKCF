@@ -11,7 +11,7 @@ namespace zkcf {
     using namespace std;
 
     VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName,
-                           const string &meanPath) {
+                           const string &meanPath, const Scalar *meanVal) {
 #ifdef CPU_ONLY
         Caffe::set_mode(Caffe::CPU);
 #else
@@ -27,8 +27,11 @@ namespace zkcf {
         if(!meanPath.empty()) {
             MeanInit(meanPath);
         }
+        else if(meanVal != nullptr){
+            MeanInit(*meanVal);
+        }
         else {
-            MeanInit(Scalar(103.939, 116.779, 123.68));
+            MeanInit(Scalar(0,0,0));
         }
 
     }
@@ -149,7 +152,6 @@ namespace zkcf {
         Scalar meanVal = cv::mean(mean);
         Mean = Mat(InputSz.SizeWH(), mean.type(), meanVal);
     }
-
 
     void VggFeature::MeanInit(const Scalar &meanVal) {
         Mean = Mat(InputSz.SizeWH(), CV_32FC3, meanVal);

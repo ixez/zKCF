@@ -15,7 +15,7 @@ namespace zkcf {
     class VggFeature : public IFeature {
     public:
         VggFeature(const string &modelPath, const string &weightsPath, const string &layerName,
-                   const string &meanPath = "");
+                   const string &meanPath = "", const Scalar *meanVal = nullptr);
         Mat Extract(const Mat& patch, FeatureSize& sz) override;
     private:
         shared_ptr<Net<float> > Model;

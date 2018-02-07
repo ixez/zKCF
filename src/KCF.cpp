@@ -41,7 +41,7 @@ namespace zkcf {
         return res;
     }
 
-    void KCF::ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz, float scale) const {
+    void KCF::ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz, float scale) {
         Rect pRoi;
 
         float cx = roi.x + roi.width / 2.0f;
@@ -52,13 +52,15 @@ namespace zkcf {
         pRoi.x = cx - pRoi.width / 2;
         pRoi.y = cy - pRoi.height / 2;
 
-        Mat prev=frm.clone();
-        rectangle(prev,pRoi,CV_RGB(255,0,0));
-        imshow("ROI", prev);
-
         Mat z = RectTools::subwindow(frm, pRoi, BORDER_REPLICATE);
         if (z.size() != TmplSz) resize(z, z, TmplSz);
         feat = Feat->Extract(z, featSz);
+
+#ifndef NDEBUG
+        Dz = z.clone();
+        DpRoi = frm.clone();
+        rectangle(DpRoi, pRoi, CV_RGB(255,0,0));
+#endif
     }
 
     Mat KCF::CalcHann(const FeatureSize &sz) {
@@ -130,7 +132,6 @@ namespace zkcf {
         float cx = roi.x + roi.width / 2.0f;
         float cy = roi.y + roi.height / 2.0f;
 
-//        Mat _frm = frm.clone();
         Point2f res;
         float pv = -numeric_limits<float>::max();
         float scale = 1.f;
@@ -141,15 +142,6 @@ namespace zkcf {
             RectTools::resize(_roi, _scale);
             ExtractFeatures(frm, _roi, z, FeatSz, _scale);
             assert(Hann.size() == z.size());
-
-            Mat prev;
-            vector<Mat> prevMats;
-            for(int c=0; c<3; c++) {
-                prevMats.push_back(z.row(c).reshape(1,FeatSz.rows));
-            }
-            merge(prevMats,prev);
-            resize(prev,prev,Size(300,300));
-            imshow("Feature",prev);
 
             z = Hann.mul(z);
 
@@ -162,7 +154,7 @@ namespace zkcf {
             pRoi.height = PaddedSz.height * ScaleRatio * scale;
             pRoi.x = cx - pRoi.width / 2;
             pRoi.y = cy - pRoi.height / 2;
-            Point2f _res = Detect(ModelX, z, _pv, frm(pRoi));
+            Point2f _res = Detect(ModelX, z, _pv);
 
             if (_scale != 1.0f) _pv *= ScaleWeight;
             if (_pv > pv) {
@@ -171,13 +163,29 @@ namespace zkcf {
                 res = _res;
             }
 
-//            rectangle(_frm, _roi, CV_RGB(255, 255, 255), 1);
+#ifndef NDEBUG
+            vector<Mat> dFeatMats;
+            for(int c=0; c<3; c++) {
+                dFeatMats.push_back(z.row(c).reshape(1,FeatSz.rows));
+            }
+            merge(dFeatMats,Dfeat);
+            resize(Dfeat,Dfeat,Size(300,300));
+            resize(Dres, Dres, Size(300,300));
+            resize(Dz, Dz, Size(300,300));
+
+            cvtColor(Dres,Dres,CV_GRAY2BGR);
+            Dres.convertTo(Dres, CV_32FC3);
+            Dz.convertTo(Dz, CV_32FC3);
+            addWeighted(Dres, 1, Dz/255.f, 0.1, 0, Dres);
+
+            Mat debug;
+            hconcat(Dres, Dfeat, debug);
+            imshow("Debug", debug);
+#endif
         }
 
         cx += (res.x * Feat->FeatureRatio.width * TmplRatio * ScaleRatio * scale);
         cy += (res.y * Feat->FeatureRatio.height * TmplRatio * ScaleRatio * scale);
-//        cx += (res.x * TmplRatio * ScaleRatio * scale);
-//        cy += (res.y * TmplRatio * ScaleRatio * scale);
 
         roi.x = cx - roi.width / 2.0f;
         roi.y = cy - roi.height / 2.0f;
@@ -207,23 +215,12 @@ namespace zkcf {
         return roi;
     }
 
-    Point2f KCF::Detect(const Mat &x, const Mat &z, float &pv, const Mat& frmRoi) const {
+    Point2f KCF::Detect(const Mat &x, const Mat &z, float &pv) {
         // since some features are much smaller than original img size, return subpixel location makes sense.
         using namespace FFTTools;
 
         Mat res = EvalResMap(x, z);
-        Mat res_, frmRoi_;
 
-        resize(res, res_,Size(300,300));
-        res_ *= 255.f;
-        res_.convertTo(res_, CV_8U);
-        cvtColor(res_, res_, CV_GRAY2BGR);
-
-        resize(frmRoi, frmRoi_, Size(300,300));
-
-        addWeighted(res_, 1, frmRoi_, 0.3, 0, res_);
-        imshow("res",res_);
-        waitKey(1);
         Point2i _pl;
         double _pv;
         minMaxLoc(res, NULL, &_pv, NULL, &_pl);
@@ -240,6 +237,11 @@ namespace zkcf {
 
         pl.x -= (res.cols) / 2;
         pl.y -= (res.rows) / 2;
+
+
+#ifndef NDEBUG
+        Dres = res.clone();
+#endif
 
         return pl;
     }
