@@ -11,17 +11,22 @@ namespace zkcf {
         using namespace FFTTools;
         Mat c = Mat(Size(sz.cols, sz.rows), CV_32F, Scalar(0));
 
-        Mat caux;
-        Mat x1aux;
-        Mat x2aux;
+        vector<Mat> caux(sz.chns);
+        vector<Mat> x1aux(sz.chns);
+        vector<Mat> x2aux(sz.chns);
+
+        #pragma omp parallel for
         for (int i = 0; i < sz.chns; i++) {
-            x1aux = x1.row(i).reshape(1, sz.rows);
-            x2aux = x2.row(i).reshape(1, sz.rows);
-            mulSpectrums(fftd(x1aux), fftd(x2aux), caux, 0, true);
-            caux = fftd(caux, true);
-            rearrange(caux);
-            caux.convertTo(caux, CV_32F);
-            c = c + real(caux);
+            x1aux[i] = x1.row(i).reshape(1, sz.rows);
+            x2aux[i] = x2.row(i).reshape(1, sz.rows);
+            mulSpectrums(fftd(x1aux[i]), fftd(x2aux[i]), caux[i], 0, true);
+            caux[i] = fftd(caux[i], true);
+            rearrange(caux[i]);
+            caux[i].convertTo(caux[i], CV_32F);
+        }
+
+        for (int i = 0; i < sz.chns; i++) {
+            c = c + real(caux[i]);
         }
 
         Mat d;

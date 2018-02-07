@@ -10,8 +10,9 @@ Email: sachika.misawa@outlook.com
 namespace zkcf {
     using namespace cv;
     HogFeature::HogFeature() {
-        FeatureRatio = 4;
-        CellSize = (int)ceil(FeatureRatio);
+        FeatureRatio.width = 4;
+        FeatureRatio.height = 4;
+        CellSize = 4;
     }
 
     Mat HogFeature::Extract(const Mat& patch, FeatureSize& sz) {
