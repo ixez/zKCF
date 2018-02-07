@@ -79,16 +79,24 @@ namespace zkcf {
         static float CalcSubPixelPeak(float left, float center, float right);   // Calculate sub-pixel peak for one dimension
 
         // Extract feature maps of roi which is padded and resized to specified template size.
-        void ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz, float scale = 1.0) const;
+        void ExtractFeatures(const Mat &frm, const Rect_<float> &roi, Mat &feat, FeatureSize &featSz, float scale = 1.0);
 
         // Eval response map, x => tmpl, z => test image patch
         Mat EvalResMap(const Mat &x, const Mat &z) const;
 
         // Predict location of the target,
-        Point2f Detect(const Mat &x, const Mat &z, float &pv, const Mat& frmRoi) const;
+        Point2f Detect(const Mat &x, const Mat &z, float &pv);
 
         // Model methods
         void ModelInit(const Mat &x);
         void ModelUpdate(const Mat &x, float lr);
+
+//#ifndef NDEBUG
+    private:
+        // For debugging
+        Mat Dres;
+        Mat Dz, DpRoi;
+        Mat Dfeat;
+//#endif
     };
 }
