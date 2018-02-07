@@ -24,7 +24,7 @@ namespace zkcf {
             case FEAT_VGG:
                 f = new VggFeature("/home/zeke/Codes/zKCF/assets/vgg/VGG_ILSVRC_16_layers_deploy.prototxt.txt",
                                    "/home/zeke/Codes/zKCF/assets/vgg/VGG_ILSVRC_16_layers.caffemodel",
-                                   "conv1_1",
+                                   "conv5_1",
                                    "/home/zeke/Libs/caffe/data/ilsvrc12/imagenet_mean.binaryproto",
                                    nullptr
                 );
@@ -48,6 +48,9 @@ namespace zkcf {
                 }
                 else if (ft == FEAT_RAW) {
                     ((GaussianKernel *) k)->Sigma = 0.2;
+                }
+                else if (ft == FEAT_VGG) {
+                    ((GaussianKernel *) k)->Sigma = 0.6;
                 }
                 else {
                     ((GaussianKernel *) k)->Sigma = 0.6;

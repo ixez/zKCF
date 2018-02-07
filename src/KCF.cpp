@@ -176,10 +176,13 @@ namespace zkcf {
             cvtColor(Dres,Dres,CV_GRAY2BGR);
             Dres.convertTo(Dres, CV_32FC3);
             Dz.convertTo(Dz, CV_32FC3);
-            addWeighted(Dres, 1, Dz/255.f, 0.1, 0, Dres);
+            Mat dres, dz;
+            dz = Dz/255.f;
+            addWeighted(Dres, 1, dz, 0.1, 0, dres);
 
             Mat debug;
-            hconcat(Dres, Dfeat, debug);
+            hconcat(dres, Dres, debug);
+            hconcat(debug, Dfeat, debug);
             imshow("Debug", debug);
 #endif
         }
@@ -302,6 +305,7 @@ namespace zkcf {
                 Padding = 3.0;
             case FEAT_GRAY:break;
             case FEAT_VGG:
+                OutputSigmaFactor = 0.1;
                 LearningRate = 0.0001;
                 Padding = 3 ;
                 TmplMode = TMPL_MODE_ROI_SZ;
