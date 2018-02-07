@@ -119,7 +119,7 @@ namespace zkcf {
             split(img_, channels);
         }
         else {
-//            subtract(img_, Mean, img_);
+            subtract(img_, Mean, img_);
             split(img_, channels);
         }
     }
