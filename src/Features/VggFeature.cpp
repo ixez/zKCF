@@ -12,7 +12,6 @@ namespace zkcf {
 
     VggFeature::VggFeature(const string &modelPath, const string &weightsPath, const string &layerName,
                            const string &meanPath) {
-//        CellSize=1;
 #ifdef CPU_ONLY
         Caffe::set_mode(Caffe::CPU);
 #else
@@ -35,12 +34,14 @@ namespace zkcf {
     }
 
     Mat VggFeature::Extract(const Mat &patch, FeatureSize &sz) {
-        FeatureRatio = (float)patch.cols / Model->blob_by_name(LayerName)->width();
 #ifdef CPU_ONLY
         Caffe::set_mode(Caffe::CPU);
 #else
         Caffe::set_mode(Caffe::GPU);
 #endif
+        FeatureRatio.width = (float)patch.cols / Model->blob_by_name(LayerName)->width();
+        FeatureRatio.height = (float)patch.rows / Model->blob_by_name(LayerName)->height();
+
         vector<Mat> inputChns;
         Preprocess(patch, InputMats);
 
@@ -59,8 +60,8 @@ namespace zkcf {
         }
         CHECK_GE(layerId, 0); CHECK_LT(layerId, Model->layers().size());
 
-//        Model->ForwardFromTo(0,layerId+1);
-        Model->Forward();
+        Model->ForwardFromTo(0,layerId+1);
+//        Model->Forward();
 
         /* Copy the output layer to a std::vector */
         const boost::shared_ptr<Blob<float>> blob = Model->blob_by_name(LayerName);
@@ -115,7 +116,7 @@ namespace zkcf {
             split(img_, channels);
         }
         else {
-            subtract(img_, Mean, img_);
+//            subtract(img_, Mean, img_);
             split(img_, channels);
         }
     }

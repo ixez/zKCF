@@ -15,6 +15,6 @@ namespace zkcf {
     public:
         // Extract feature maps in r x c x d maps encoded in d x (r*c) Mat.
         virtual Mat Extract(const Mat& patch, FeatureSize& sz)=0;
-        float FeatureRatio = 1;
+        Size2f FeatureRatio;
     };
 }

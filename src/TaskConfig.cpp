@@ -58,7 +58,7 @@ namespace ztrack {
 			cv::rectangle(renderedFrm, result, cv::Scalar(0, 255, 255), 2, 8);
 			cv::putText(renderedFrm, text, cv::Point(10, 25), CV_FONT_HERSHEY_COMPLEX, 0.6, CV_RGB(255, 255, 0), 1);
 			cv::imshow("Tracking Monitor", renderedFrm);
-			cv::waitKey(1);
+			cv::waitKey(0);
 		}
 	}
 

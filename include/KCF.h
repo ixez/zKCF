@@ -85,7 +85,7 @@ namespace zkcf {
         Mat EvalResMap(const Mat &x, const Mat &z) const;
 
         // Predict location of the target,
-        Point2f Detect(const Mat &x, const Mat &z, float &pv) const;
+        Point2f Detect(const Mat &x, const Mat &z, float &pv, const Mat& frmRoi) const;
 
         // Model methods
         void ModelInit(const Mat &x);
