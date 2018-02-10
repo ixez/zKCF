@@ -3,12 +3,16 @@ project(zKCF)
 
 option(BUILD_VGG "Build VGG features." OFF)
 
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/Modules)
+
 set(dep_libs "")
 set(dep_include_dirs "")
 
+# ---[ OpenCV
 find_package(OpenCV REQUIRED)
 set(dep_libs ${dep_libs} ${OpenCV_LIBS})
 
+# ---[ OpenMP
 find_package(OpenMP)
 if(OPENMP_FOUND)
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
@@ -16,6 +20,12 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
+# ---[ Google-gflags
+find_package(GFlags)
+set(dep_include_dirs ${dep_include_dirs} ${GFLAGS_INCLUDE_DIRS})
+set(dep_libs ${dep_libs} ${GFLAGS_LIBRARIES})
+
+# ---[ Source files
 set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(src
         ${src_dir}/TaskConfig.cpp
@@ -59,9 +69,10 @@ set(include
         ${include_dir}/Features/Impl/HogLabFeature/labdata.hpp
 )
 
+# ---[ VGG feature
 if(BUILD_VGG)
     find_package(Caffe REQUIRED)
-    set(dep_include_dirs ${Caffe_INCLUDE_DIRS})
+    set(dep_include_dirs ${dep_include_dirs} ${Caffe_INCLUDE_DIRS})
     set(dep_libs ${dep_libs} ${Caffe_LIBRARIES})
     set(include ${include} ${include_dir}/Features/VggFeature.h)
     set(src ${src} ${src_dir}/Features/VggFeature.cpp)
