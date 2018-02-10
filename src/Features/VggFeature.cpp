@@ -63,7 +63,7 @@ namespace zkcf {
         }
         CHECK_GE(layerId, 0); CHECK_LT(layerId, Model->layers().size());
 
-        Model->ForwardFromTo(0,layerId+1);
+        Model->ForwardFromTo(0,layerId);
 //        Model->Forward();
 
         /* Copy the output layer to a std::vector */

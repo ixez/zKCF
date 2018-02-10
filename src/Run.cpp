@@ -6,6 +6,7 @@ Email: sachika.misawa@outlook.com
 
 #include "KCF.h"
 #include "TaskConfig.h"
+#include <gflags/gflags.h>
 
 int main(int argc, char* argv[])
 {
@@ -13,7 +14,8 @@ int main(int argc, char* argv[])
     using namespace zkcf;
     using namespace std;
     ztrack::TaskConfig conf;
-    conf.SetArgs(argc, argv);
+    conf.SetArgs(argc, argv);  //TODO: merge TaskConfig with gflags
+    gflags::ParseCommandLineFlags(&argc, &argv, true);
 
     Mat frm;
     Rect result;
