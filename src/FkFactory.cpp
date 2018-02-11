@@ -3,11 +3,14 @@ Author: iXez
 Website: https://ixez.github.io
 Email: sachika.misawa@outlook.com
 */
+
+#include "FkFactory.h"
+#ifdef BUILD_VGG
+#include "Features/VggFeature.h"
+#endif
 #ifndef BUILD_LIB
 #include "Run.h"
 #endif
-#include "Features/VggFeature.h"
-#include "FkFactory.h"
 
 namespace zkcf {
     void FkFactory(FeatureType ft, KernelType kt, IFeature *&f, IKernel *&k) {

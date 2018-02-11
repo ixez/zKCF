@@ -21,6 +21,7 @@ int main(int argc, char* argv[])
     conf.SetArgs(argc, argv);  //TODO: merge TaskConfig with options_description
 
     options_description desc("Allowed options");
+#ifdef BUILD_VGG
     desc.add_options()
             ("vgg_prototxt",
              value<string>()->default_value("VGG_ILSVRC_16_layers_deploy.prototxt.txt"),
@@ -34,6 +35,23 @@ int main(int argc, char* argv[])
             ("vgg_meanproto",
              value<string>()->default_value("imagenet_mean.binaryproto"),
              "Binaryproto file of the net")
+    ;
+#endif
+    desc.add_options()
+            ("padding", value<float>(),
+             "Padding ratio of search area")
+            ("learning_rate", value<double>(),
+             "Learning rate of the correlation filter")
+            ("output_sigma_factor", value<double>(),
+             "OutputSigmaFactor of Y")
+            ("enable_scale", value<bool>(),
+             "Enable scaling")
+            ("scale_n", value<int>(),
+            "Scale amount")
+            ("scale_step", value<float>(),
+            "Scale step")
+            ("scale_weight", value<float>(),
+            "Scale weight when a different scale produce a higher response score")
     ;
     store(parse_command_line(argc, argv, desc), VMap);
     notify(VMap);

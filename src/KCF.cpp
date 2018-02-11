@@ -7,13 +7,9 @@ Email: sachika.misawa@outlook.com
 #include "KCF.h"
 #include "FFTTools.hpp"
 #include "recttools.hpp"
+#ifndef BUILD_LIB
 #include "Run.h"
-#include <gflags/gflags.h>
-
-DEFINE_double(padding, -1.0, "Padding ratio of search area");
-DEFINE_double(learningRate, -1.0, "Learning rate of the correlation filter");
-DEFINE_double(outputSigmaFactor, -1.0, "OutputSigmaFactor of Y");
-DEFINE_double(scaleWeight, -1.0, "Scale weight when a different scale produce a higher response score");
+#endif
 
 namespace zkcf {
     using namespace cv;
@@ -314,11 +310,21 @@ namespace zkcf {
             case FEAT_VGG:
                 OutputSigmaFactor = 0.1;
                 LearningRate = 0.0001;
-                Padding = 3 ;
+                Padding = 3;
                 TmplMode = TMPL_MODE_ROI_SZ;
-                EnableScale = false;
                 break;
         }
+
+#ifndef BUILD_LIB
+        // For customizing parameters
+        Padding = VMap.count("padding") ? VMap["padding"].as<float>() : Padding;
+        LearningRate = VMap.count("learning_rate") ? VMap["learning_rate"].as<float>() : LearningRate;
+        OutputSigmaFactor = VMap.count("output_sigma_factor") ? VMap["output_sigma_factor"].as<float>() : OutputSigmaFactor;
+        EnableScale = VMap.count("enable_scale") ? VMap["enable_scale"].as<bool>() : EnableScale;
+        ScaleN = VMap.count("scale_n") ? VMap["scale_n"].as<int>() : ScaleN;
+        ScaleStep = VMap.count("scale_step") ? VMap["scale_step"].as<float>() : ScaleStep;
+        ScaleWeight = VMap.count("scale_weight") ? VMap["scale_weight"].as<float>() : ScaleWeight;
+#endif
 
     }
 
