@@ -20,10 +20,10 @@ if(OPENMP_FOUND)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-# ---[ Google-gflags
-find_package(GFlags)
-set(dep_include_dirs ${dep_include_dirs} ${GFLAGS_INCLUDE_DIRS})
-set(dep_libs ${dep_libs} ${GFLAGS_LIBRARIES})
+# ---[ Boost
+find_package(Boost REQUIRED COMPONENTS program_options)
+list(APPEND dep_include_dirs ${Boost_INCLUDE_DIRS})
+list(APPEND dep_libs ${Boost_LIBRARIES})
 
 # ---[ Source files
 set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -48,13 +48,14 @@ set(src
 set(include_dir ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(include
         ${include_dir}/TaskConfig.h
+        ${include_dir}/Run.h
+        ${include_dir}/Def.h
 
         ${include_dir}/ITracker.h
         ${include_dir}/KCF.h
         ${include_dir}/recttools.hpp
         ${include_dir}/FFTTools.hpp
 
-        ${include_dir}/Def.h
         ${include_dir}/FkFactory.h
 
         ${include_dir}/Kernels/IKernel.h

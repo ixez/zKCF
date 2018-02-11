@@ -10,7 +10,6 @@ Email: sachika.misawa@outlook.com
 #include "Features/IFeature.h"
 #include "ITracker.h"
 #include <opencv2/opencv.hpp>
-
 namespace zkcf {
     using namespace cv;
 
