@@ -6,7 +6,6 @@ Email: sachika.misawa@outlook.com
 #pragma once
 #include "Features/IFeature.h"
 #include <caffe/caffe.hpp>
-#include <boost/shared_ptr.hpp>
 #include <opencv2/opencv.hpp>
 
 namespace zkcf {
@@ -18,7 +17,7 @@ namespace zkcf {
                    const string &meanPath = "", const Scalar *meanVal = nullptr);
         Mat Extract(const Mat& patch, FeatureSize& sz) override;
     private:
-        shared_ptr<Net<float> > Model;
+        std::shared_ptr<Net<float> > Model;
         FeatureSize InputSz;
         Blob<float> *InputLyr;
         vector<Mat> InputMats;
