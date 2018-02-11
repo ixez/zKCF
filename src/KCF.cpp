@@ -7,6 +7,13 @@ Email: sachika.misawa@outlook.com
 #include "KCF.h"
 #include "FFTTools.hpp"
 #include "recttools.hpp"
+#include "Run.h"
+#include <gflags/gflags.h>
+
+DEFINE_double(padding, -1.0, "Padding ratio of search area");
+DEFINE_double(learningRate, -1.0, "Learning rate of the correlation filter");
+DEFINE_double(outputSigmaFactor, -1.0, "OutputSigmaFactor of Y");
+DEFINE_double(scaleWeight, -1.0, "Scale weight when a different scale produce a higher response score");
 
 namespace zkcf {
     using namespace cv;
@@ -312,6 +319,7 @@ namespace zkcf {
                 EnableScale = false;
                 break;
         }
+
     }
 
     void KCF::TmplInit() {
