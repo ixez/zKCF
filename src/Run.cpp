@@ -40,9 +40,9 @@ int main(int argc, char* argv[])
     desc.add_options()
             ("padding", value<float>(),
              "Padding ratio of search area")
-            ("learning_rate", value<double>(),
+            ("learning_rate", value<float>(),
              "Learning rate of the correlation filter")
-            ("output_sigma_factor", value<double>(),
+            ("output_sigma_factor", value<float>(),
              "OutputSigmaFactor of Y")
             ("enable_scale", value<bool>(),
              "Enable scaling")
