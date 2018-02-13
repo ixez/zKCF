@@ -30,10 +30,10 @@ namespace zkcf {
 #ifdef BUILD_VGG
             case FEAT_VGG:
 #ifndef BUILD_LIB
-                f = new VggFeature(VMap["vgg_prototxt"].as<string>(),
-                                   VMap["vgg_caffemodel"].as<string>(),
-                                   VMap["vgg_layer"].as<string>(),
-                                   VMap["vgg_meanproto"].as<string>(),
+                f = new VggFeature(vMap["vgg_prototxt"].as<string>(),
+                                   vMap["vgg_caffemodel"].as<string>(),
+                                   vMap["vgg_layer"].as<string>(),
+                                   vMap["vgg_meanproto"].as<string>(),
                                    nullptr);
 #endif
 //                f = new VggFeature("./assets/vgg/VGG_CNN_M_2048_deploy.prototxt",
