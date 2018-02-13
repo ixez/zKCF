@@ -317,13 +317,13 @@ namespace zkcf {
 
 #ifndef BUILD_LIB
         // For customizing parameters
-        Padding = VMap.count("padding") ? VMap["padding"].as<float>() : Padding;
-        LearningRate = VMap.count("learning_rate") ? VMap["learning_rate"].as<float>() : LearningRate;
-        OutputSigmaFactor = VMap.count("output_sigma_factor") ? VMap["output_sigma_factor"].as<float>() : OutputSigmaFactor;
-        EnableScale = VMap.count("enable_scale") ? VMap["enable_scale"].as<bool>() : EnableScale;
-        ScaleN = VMap.count("scale_n") ? VMap["scale_n"].as<int>() : ScaleN;
-        ScaleStep = VMap.count("scale_step") ? VMap["scale_step"].as<float>() : ScaleStep;
-        ScaleWeight = VMap.count("scale_weight") ? VMap["scale_weight"].as<float>() : ScaleWeight;
+        Padding = vMap.count("padding") ? vMap["padding"].as<float>() : Padding;
+        LearningRate = vMap.count("learning_rate") ? vMap["learning_rate"].as<float>() : LearningRate;
+        OutputSigmaFactor = vMap.count("output_sigma_factor") ? vMap["output_sigma_factor"].as<float>() : OutputSigmaFactor;
+        EnableScale = vMap.count("enable_scale") ? vMap["enable_scale"].as<bool>() : EnableScale;
+        ScaleN = vMap.count("scale_n") ? vMap["scale_n"].as<int>() : ScaleN;
+        ScaleStep = vMap.count("scale_step") ? vMap["scale_step"].as<float>() : ScaleStep;
+        ScaleWeight = vMap.count("scale_weight") ? vMap["scale_weight"].as<float>() : ScaleWeight;
 #endif
 
     }

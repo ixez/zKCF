@@ -25,6 +25,11 @@ find_package(Boost REQUIRED COMPONENTS program_options)
 list(APPEND dep_include_dirs ${Boost_INCLUDE_DIRS})
 list(APPEND dep_libs ${Boost_LIBRARIES})
 
+# ---[ Glog
+find_package(Glog REQUIRED)
+list(APPEND dep_include_dirs ${GLOG_INCLUDE_DIRS})
+list(APPEND dep_libs ${GLOG_LIBRARIES})
+
 # ---[ Source files
 set(src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(src
