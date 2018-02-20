@@ -308,8 +308,8 @@ namespace zkcf {
                 Padding = 3.0;
             case FEAT_GRAY:break;
             case FEAT_VGG:
-                OutputSigmaFactor = 0.1;
-                LearningRate = 0.0001;
+                OutputSigmaFactor = 0.152;
+                LearningRate = 0.004;
                 Padding = 3;
                 TmplMode = TMPL_MODE_ROI_SZ;
                 break;
