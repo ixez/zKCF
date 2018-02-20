@@ -109,10 +109,11 @@ int main(int argc, char* argv[])
 
     VMapInit(argc, argv);
     FkInit();
+
     google::InitGoogleLogging(argv[0]);
+    google::InstallFailureSignalHandler();
 
     KCF tracker(feat, krnl);
-
     Mat frm;
     Rect result;
     for (int frameId = conf.StartFrmId, i = 1; frameId <= conf.EndFrmId; ++frameId, ++i)
