@@ -15,11 +15,11 @@ The performance and speed of zKCF and its base KCFcpp are evaluated and compared
 <img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_quality_plot.jpg" />
 
 ### Speed (FPS)
-|        	| zKCF_Vgg 	| zKCF_Hog 	| zKCF_HogLab 	| KCFcpp_HogLab 	| KCFcpp_Hog 	|
-|--------	|----------	|----------	|-------------	|---------------	|------------	|
-| CVPR13 	| 12.23    	| 90.48    	| 52.70       	| 76.54         	| 102.89     	|
-| OTB50  	| 12.54    	| 99.80    	| 56.17       	| 75.58         	| 103.47     	|
-| OTB100 	| 12.49    	| 102.63   	| 57.52       	| 78.05         	| 107.44     	|
+|        	| zKCF_Vgg 	| zKCF_Hog 	| zKCF_HogLab 	| KCFcpp_Hog 	| KCFcpp_HogLab 	|
+|--------	|----------	|----------	|-------------	|------------	|---------------	|
+| CVPR13 	| 12.23    	| 90.48    	| 52.70       	| 102.89     	| 76.54         	|
+| OTB50  	| 12.54    	| 99.80    	| 56.17       	| 103.47     	| 75.58         	|
+| OTB100 	| 12.49    	| 102.63   	| 57.52       	| 107.44     	| 78.05         	|
 
 ## Demo Usage
 **This section is deprecated due to the new dependencies of Caffe, Boost and Glog. Please read `CMakeLists.txt` and the relative files. More details will be supplemented soon.**
