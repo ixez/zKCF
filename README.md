@@ -7,7 +7,7 @@ In zKCF, the implementation of KCF's main body, feature extractors and correlati
 
 ## Evaluation and Comparison
 
-The performance and speed of zKCF and its base KCFcpp are evaluated and compared on CVPR13[3] and OTB50/100[4] tracking benchmarks.
+The performance and speed of zKCF and its base KCFcpp are evaluated and compared on CVPR13[3] and OTB50/100[4] tracking benchmarks. `zKCF_Vgg` exploits VGG16's conv5_1 layer as the feature extractor.
 
 ### Performance
 <img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_quality_plot.jpg" />

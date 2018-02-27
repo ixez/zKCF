@@ -64,7 +64,6 @@ namespace zkcf {
         CHECK_GE(layerId, 0); CHECK_LT(layerId, Model->layers().size());
 
         Model->ForwardFromTo(0,layerId);
-//        Model->Forward();
 
         /* Copy the output layer to a std::vector */
         const boost::shared_ptr<Blob<float>> blob = Model->blob_by_name(LayerName);
@@ -73,7 +72,6 @@ namespace zkcf {
         sz.rows = blob->height();
         sz.cols = blob->width();
         sz.chns = blob->channels();
-//        sz.chns = 10;
         Mat feat(sz.chns,sz.rows*sz.cols,CV_32F);
 
         float *blobData=blob->mutable_cpu_data();
