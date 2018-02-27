@@ -1,24 +1,28 @@
 # zKCF
-zKCF is an extensible C++ implementation of KCF(Kernelized Correlation Filters) visual tracker.   
-This project is mainly based on the code of [KCFcpp](https://github.com/joaofaro/KCFcpp) and [KCF Matlab](http://www.robots.ox.ac.uk/~joao/circulant/)[1][2].   
-In zKCF, the implementation of KCF's main body, feature extractors and correlation kernels are seperated, implementation is refined and reorganized for code readability and extensibility. Moreover, with parameters tuning, zKCF obtain a slightly better performance and a faster speed.
+
+zKCF is an extensible C++ implementation of KCF(Kernelized Correlation Filters) visual tracker.
+
+This project is mainly based on the code of [KCFcpp](https://github.com/joaofaro/KCFcpp) and [KCF Matlab](http://www.robots.ox.ac.uk/~joao/circulant/)[1][2].
+In zKCF, the implementation of KCF's main body, feature extractors and correlation kernels are seperated, implementation is refined and reorganized for code readability and extensibility. Moreover, zKCF obtain a better performance and a faster speed with refined implementation and **VGG feature extractor**.
 
 ## Evaluation and Comparison
-The performance and speed of zKCF and its base KCFcpp are evaluated and compared with the same components of HoG feature and Gaussian kernel on CVPR13[3] and OTB50/100[4] tracking benchmark. Two sets of parameters are tested, which are `TemplateLen` = 128 and `TemplateLen` = 96. Since some implementation details are refined, zKCF obtains a better performance, with a same level of speed.
+
+The performance and speed of zKCF and its base KCFcpp are evaluated and compared on CVPR13[3] and OTB50/100[4] tracking benchmarks.
 
 ### Performance
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_plot.jpg" />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_plot.jpg" />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_plot.jpg" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_quality_plot.jpg" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_quality_plot.jpg" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_quality_plot.jpg" />
 
 ### Speed (FPS)
-|        	| zKCF_96 	| KCF_96 	| zKCF_128 	| KCF_128 	|
-|--------	|---------	|--------	|----------	|---------	|
-| CVPR13 	| 115.07  	| 108.75 	| 75.64    	| 76.98   	|
-| OTB50  	| 139.13  	| 77.55  	| 94.12    	| 95.40   	|
-| OTB100 	| 145.80  	| 92.33  	| 97.55    	| 99.03   	|
+|        	| zKCF_Vgg 	| zKCF_Hog 	| zKCF_HogLab 	| KCFcpp_HogLab 	| KCFcpp_Hog 	|
+|--------	|----------	|----------	|-------------	|---------------	|------------	|
+| CVPR13 	| 12.23    	| 90.48    	| 52.70       	| 76.54         	| 102.89     	|
+| OTB50  	| 12.54    	| 99.80    	| 56.17       	| 75.58         	| 103.47     	|
+| OTB100 	| 12.49    	| 102.63   	| 57.52       	| 78.05         	| 107.44     	|
 
 ## Demo Usage
+**This section is deprecated due to the new dependencies of Caffe, Boost and Glog. Please read `CMakeLists.txt` and the relative files. More details will be supplemented soon.**
 ### Compilation
 zKCF's dependencies include CMake(>3.0) and OpenCV(2/3).   
 Compilation follows an ordinary procedure of CMake project and is tested under Ubuntu 16.04.   
@@ -63,11 +67,12 @@ Nevertheless, parameters can be initialized for different features and kernels i
 
 ## TODOs
 * Features
-    * HogLabFeature
-    * CNN Feature
+    - [x] HogLabFeature
+    - [x] VGG Feature (conv5)
+    - [ ] VGG Feature (conv1)
 * Kernels
-    * Linear kernel
-    * Polynomial kernel
+    - [ ] Linear kernel
+    - [ ] Polynomial kernel
 
 ## References
 [1] Henriques, J. F., et al. "High-Speed Tracking with Kernelized Correlation Filters." IEEE Transactions on Pattern Analysis & Machine Intelligence 37.3(2015):583-596.   
