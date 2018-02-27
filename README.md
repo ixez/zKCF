@@ -10,9 +10,9 @@ In zKCF, the implementation of KCF's main body, feature extractors and correlati
 The performance and speed of zKCF and its base KCFcpp are evaluated and compared on CVPR13[3] and OTB50/100[4] tracking benchmarks. `zKCF_Vgg` exploits VGG16's conv5_1 layer as the feature extractor.
 
 ### Performance
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_quality_plot.jpg" />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_quality_plot.jpg" />
-<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_quality_plot.jpg" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/CVPR13_quality_plots.png" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB50_quality_plots.png" />
+<img src="https://raw.githubusercontent.com/ixez/zKCF/master/assets/imgs/OTB100_quality_plots.png" />
 
 ### Speed (FPS)
 |        	| zKCF_Vgg 	| zKCF_Hog 	| zKCF_HogLab 	| KCFcpp_Hog 	| KCFcpp_HogLab 	|
